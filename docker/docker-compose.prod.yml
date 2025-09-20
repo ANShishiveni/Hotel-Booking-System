@@ -1,0 +1,198 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (Production)
+  db:
+    image: postgres:15-alpine
+    container_name: hotel_booking_db_prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hotel_booking_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-hotel_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./backups:/backups
+    networks:
+      - hotel_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hotel_user} -d ${POSTGRES_DB:-hotel_booking_prod}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching and rate limiting (Production)
+  redis:
+    image: redis:7-alpine
+    container_name: hotel_booking_redis_prod
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data_prod:/data
+    networks:
+      - hotel_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Hotel Booking Application (Production)
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: hotel_booking_web_prod
+    environment:
+      # Flask Configuration
+      FLASK_ENV: production
+      SECRET_KEY: ${SECRET_KEY}
+      
+      # Database Configuration
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hotel_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-hotel_booking_prod}
+      
+      # Redis Configuration
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      
+      # JWT Configuration
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      
+      # Payment Configuration
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      
+      # Email Configuration
+      MAIL_SERVER: ${MAIL_SERVER}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USE_TLS: ${MAIL_USE_TLS}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_DEFAULT_SENDER: ${MAIL_DEFAULT_SENDER}
+      
+      # Application Configuration
+      TIMEZONE: ${TIMEZONE:-UTC}
+      BOOKING_ADVANCE_DAYS: ${BOOKING_ADVANCE_DAYS:-365}
+      BOOKING_CANCELLATION_HOURS: ${BOOKING_CANCELLATION_HOURS:-24}
+      
+      # Security Configuration
+      BCRYPT_LOG_ROUNDS: ${BCRYPT_LOG_ROUNDS:-15}
+      SESSION_COOKIE_SECURE: true
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FILE: /app/logs/app.log
+    volumes:
+      - ../logs:/app/logs
+      - ../uploads:/app/uploads
+    networks:
+      - hotel_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Load Balancer (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: hotel_booking_nginx_prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.prod.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+      - ../logs/nginx:/var/log/nginx
+    networks:
+      - hotel_network
+    depends_on:
+      - web
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # Database Backup Service
+  backup:
+    image: postgres:15-alpine
+    container_name: hotel_booking_backup
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hotel_booking_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-hotel_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+      - ./backup_script.sh:/backup_script.sh
+    networks:
+      - hotel_network
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        until pg_isready -h db -p 5432 -U ${POSTGRES_USER:-hotel_user}; do sleep 1; done &&
+        echo 'Starting backup service...' &&
+        while true; do
+          sh /backup_script.sh &&
+          sleep 86400
+        done
+      "
+    restart: unless-stopped
+
+  # Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: hotel_booking_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - hotel_network
+    restart: unless-stopped
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: hotel_booking_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - hotel_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data_prod:
+    driver: local
+  redis_data_prod:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  hotel_network:
+    driver: bridge

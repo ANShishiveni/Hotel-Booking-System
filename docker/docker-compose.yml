@@ -1,0 +1,157 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: hotel_booking_db
+    environment:
+      POSTGRES_DB: hotel_booking
+      POSTGRES_USER: hotel_user
+      POSTGRES_PASSWORD: hotel_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - hotel_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hotel_user -d hotel_booking"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: hotel_booking_redis
+    command: redis-server --appendonly yes --requirepass redis_password
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - hotel_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Hotel Booking Application
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: hotel_booking_web
+    environment:
+      # Flask Configuration
+      FLASK_ENV: development
+      SECRET_KEY: dev-secret-key-change-in-production
+      
+      # Database Configuration
+      DATABASE_URL: postgresql://hotel_user:hotel_password@db:5432/hotel_booking
+      
+      # Redis Configuration
+      REDIS_URL: redis://:redis_password@redis:6379/0
+      
+      # JWT Configuration
+      JWT_SECRET_KEY: jwt-secret-change-in-production
+      
+      # Payment Configuration (Mock values)
+      STRIPE_PUBLISHABLE_KEY: pk_test_mock_key
+      STRIPE_SECRET_KEY: sk_test_mock_key
+      STRIPE_WEBHOOK_SECRET: whsec_mock_webhook_secret
+      
+      # Email Configuration (Mock values)
+      MAIL_SERVER: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USE_TLS: true
+      MAIL_USERNAME: mock@gmail.com
+      MAIL_PASSWORD: mock_password
+      MAIL_DEFAULT_SENDER: noreply@hotelbooking.com
+      
+      # Application Configuration
+      TIMEZONE: UTC
+      BOOKING_ADVANCE_DAYS: 365
+      BOOKING_CANCELLATION_HOURS: 24
+      
+      # Security Configuration
+      BCRYPT_LOG_ROUNDS: 12
+      
+      # Logging
+      LOG_LEVEL: INFO
+      LOG_FILE: /app/logs/app.log
+    volumes:
+      - ../logs:/app/logs
+      - ../uploads:/app/uploads
+    ports:
+      - "5000:5000"
+    networks:
+      - hotel_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: hotel_booking_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    networks:
+      - hotel_network
+    depends_on:
+      - web
+    restart: unless-stopped
+
+  # Database Migration Service
+  migrate:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: hotel_booking_migrate
+    environment:
+      DATABASE_URL: postgresql://hotel_user:hotel_password@db:5432/hotel_booking
+      FLASK_APP: app
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        until pg_isready -h db -p 5432 -U hotel_user; do sleep 1; done &&
+        echo 'Running migrations...' &&
+        flask db upgrade &&
+        echo 'Migrations completed!' &&
+        python scripts/seed_data.py
+      "
+    networks:
+      - hotel_network
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  hotel_network:
+    driver: bridge
