@@ -86,7 +86,7 @@ def create_payment_intent():
             }
             
             payment.payment_intent_id = intent['id']
-            payment.metadata = {
+            payment.payment_metadata = {
                 'stripe_intent_id': intent['id'],
                 'client_secret': intent['client_secret']
             }
@@ -383,7 +383,7 @@ def refund_payment(payment_id):
                 status='completed',
                 provider_transaction_id=refund['id'],
                 processed_at=datetime.utcnow(),
-                metadata={'refund_for': payment.id, 'stripe_refund_id': refund['id']}
+                payment_metadata={'refund_for': payment.id, 'stripe_refund_id': refund['id']}
             )
             
             db.session.add(refund_payment)

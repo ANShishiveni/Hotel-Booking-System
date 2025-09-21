@@ -12,13 +12,16 @@ def index():
     """Home page with featured hotels"""
     try:
         # Get featured hotels (highest rated, active)
-        featured_hotels = db.session.query(Hotel)\
-            .filter(Hotel.is_active == True)\
-            .outerjoin(Review, and_(Review.hotel_id == Hotel.id, Review.is_active == True))\
-            .group_by(Hotel.id)\
-            .having(func.avg(Review.rating).isnot(None))\
-            .order_by(desc(func.avg(Review.rating)))\
-            .limit(6).all()
+        try:
+            featured_hotels = db.session.query(Hotel)\
+                .filter(Hotel.is_active == True)\
+                .outerjoin(Review, and_(Review.hotel_id == Hotel.id, Review.is_active == True))\
+                .group_by(Hotel.id)\
+                .having(func.avg(Review.rating).isnot(None))\
+                .order_by(desc(func.avg(Review.rating)))\
+                .limit(6).all()
+        except:
+            featured_hotels = []
         
         # If no hotels with reviews, get any active hotels
         if not featured_hotels:
@@ -249,6 +252,41 @@ def api_hotel_availability(hotel_id):
 def contact():
     """Contact page"""
     return render_template('contact.html')
+
+@main_bp.route('/api/contact', methods=['POST'])
+def contact_submit():
+    """Handle contact form submission"""
+    try:
+        data = request.get_json() or request.form.to_dict()
+        
+        # Validate required fields
+        required_fields = ['firstName', 'lastName', 'email', 'subject', 'message']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({
+                    'success': False,
+                    'error': f'{field} is required'
+                }), 400
+        
+        # Here you would typically:
+        # 1. Send an email to the admin
+        # 2. Store the message in the database
+        # 3. Send a confirmation email to the user
+        
+        # For now, just log the message
+        current_app.logger.info(f"Contact form submission from {data['email']}: {data['subject']}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Thank you for your message! We will get back to you soon.'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error processing contact form: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'An error occurred while processing your message. Please try again.'
+        }), 500
 
 @main_bp.route('/about')
 def about():

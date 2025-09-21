@@ -14,6 +14,10 @@ from decimal import Decimal
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
 from app import create_app, db
 from app.models import User, Role, Hotel, RoomType, Room, Booking, Guest, Review
 
@@ -304,10 +308,12 @@ def create_room_types():
             ).first()
             
             if not room_type:
+                room_type_data_copy = room_type_data.copy()
+                room_type_data_copy['base_price'] = adjusted_price
+                
                 room_type = RoomType(
                     hotel_id=hotel.id,
-                    **room_type_data,
-                    base_price=adjusted_price
+                    **room_type_data_copy
                 )
                 db.session.add(room_type)
                 print(f"  ✓ Created room type: {room_type_data['name']} at {hotel.name}")
@@ -443,7 +449,7 @@ def main():
     print("=" * 50)
     
     # Create Flask app
-    app = create_app('development')
+    app = create_app('DevelopmentConfig')
     
     with app.app_context():
         # Create all tables

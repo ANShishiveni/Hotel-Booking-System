@@ -21,6 +21,10 @@ def create_tables():
 def run_migrations():
     """Run database migrations"""
     try:
+        # Check if migrations folder exists
+        if not os.path.exists('migrations'):
+            print("ℹ️  No migrations folder found, skipping migrations")
+            return
         upgrade()
         print("✅ Database migrations completed successfully")
     except Exception as e:
@@ -29,7 +33,7 @@ def run_migrations():
 def main():
     """Main application entry point"""
     # Get configuration from environment
-    config_name = os.environ.get('FLASK_ENV', 'development')
+    config_name = os.environ.get('FLASK_ENV', 'DevelopmentConfig')
     
     # Create Flask application
     app = create_app(config_name)

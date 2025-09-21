@@ -397,7 +397,7 @@ class Payment(db.Model):
     provider_transaction_id = db.Column(db.String(100))
     status = db.Column(db.String(20), nullable=False, default='pending')  # pending, completed, failed, refunded
     payment_intent_id = db.Column(db.String(100))  # For Stripe integration
-    metadata = db.Column(db.JSON)  # Store provider-specific data
+    payment_metadata = db.Column(db.JSON)  # Store provider-specific data
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     processed_at = db.Column(db.DateTime)
@@ -434,7 +434,7 @@ class Payment(db.Model):
             'provider_transaction_id': self.provider_transaction_id,
             'status': self.status,
             'payment_intent_id': self.payment_intent_id,
-            'metadata': self.metadata or {},
+            'payment_metadata': self.payment_metadata or {},
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
             'processed_at': self.processed_at.isoformat() if self.processed_at else None
