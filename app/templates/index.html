@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Namibia Hotel Booking System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 mb-4">Welcome to Namibia's Premier Hotel Booking Experience</h1>
+                <p class="lead mb-4">Discover luxury accommodations across Namibia's most beautiful destinations. From the bustling capital of Windhoek to the stunning landscapes of Swakopmund and beyond.</p>
+                <a href="{{ url_for('main.search_hotels') }}" class="btn btn-secondary btn-lg me-3">
+                    <i class="fas fa-search me-2"></i>Find Hotels
+                </a>
+                <a href="{{ url_for('main.hotels') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-list me-2"></i>Browse All Hotels
+                </a>
+            </div>
+            <div class="col-lg-6">
+                <!-- Search Form -->
+                <div class="search-form">
+                    <h4 class="text-dark mb-4">Find Your Perfect Stay</h4>
+                    <form id="searchForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="checkIn" class="form-label">Check-in Date</label>
+                                <input type="date" class="form-control" id="checkIn" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="checkOut" class="form-label">Check-out Date</label>
+                                <input type="date" class="form-control" id="checkOut" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="guests" class="form-label">Guests</label>
+                                <select class="form-select" id="guests" required>
+                                    <option value="1">1 Guest</option>
+                                    <option value="2" selected>2 Guests</option>
+                                    <option value="3">3 Guests</option>
+                                    <option value="4">4 Guests</option>
+                                    <option value="5">5+ Guests</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">City</label>
+                                <select class="form-select" id="city">
+                                    <option value="">All Cities</option>
+                                    <option value="Windhoek">Windhoek</option>
+                                    <option value="Swakopmund">Swakopmund</option>
+                                    <option value="Walvis Bay">Walvis Bay</option>
+                                    <option value="Ondangwa">Ondangwa</option>
+                                    <option value="Rundu">Rundu</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>Search Hotels
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100 border-0">
+                    <div class="card-body">
+                        <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Secure Booking</h5>
+                        <p class="card-text">Your personal and payment information is protected with industry-standard encryption and security measures.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100 border-0">
+                    <div class="card-body">
+                        <i class="fas fa-clock fa-3x text-secondary mb-3"></i>
+                        <h5 class="card-title">24/7 Support</h5>
+                        <p class="card-text">Our dedicated customer support team is available around the clock to assist you with any questions or concerns.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100 border-0">
+                    <div class="card-body">
+                        <i class="fas fa-star fa-3x text-accent mb-3"></i>
+                        <h5 class="card-title">Verified Reviews</h5>
+                        <p class="card-text">Read authentic reviews from verified guests to make informed decisions about your stay.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Hotels Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5">Featured Hotels</h2>
+                <p class="lead">Discover our handpicked selection of premium accommodations</p>
+            </div>
+        </div>
+        
+        {% if hotels %}
+        <div class="row" id="featuredHotels">
+            {% for hotel in hotels %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card hotel-card">
+                    {% if hotel.images and hotel.images|length > 0 %}
+                    <img src="{{ hotel.images[0] }}" class="card-img-top" alt="{{ hotel.name }}">
+                    {% else %}
+                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" class="card-img-top" alt="{{ hotel.name }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ hotel.name }}</h5>
+                            <span class="badge bg-primary">{{ hotel.star_rating }}★</span>
+                        </div>
+                        <p class="card-text text-muted">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ hotel.city }}, {{ hotel.country }}
+                        </p>
+                        <p class="card-text">{{ hotel.description[:100] }}{% if hotel.description|length > 100 %}...{% endif %}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="rating-stars">
+                                {% for i in range(5) %}
+                                    {% if i < (hotel.average_rating or 0) %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="ms-1 text-muted">({{ hotel.reviews|length }} reviews)</span>
+                            </div>
+                            <a href="{{ url_for('main.hotel_detail', hotel_id=hotel.id) }}" class="btn btn-primary">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col-12 text-center">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No featured hotels available at the moment. Please check back later.
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-0">
+                    <div class="card-body">
+                        <i class="fas fa-hotel fa-3x text-primary mb-3"></i>
+                        <h3 class="display-6" id="totalHotels">-</h3>
+                        <p class="text-muted">Hotels Available</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-0">
+                    <div class="card-body">
+                        <i class="fas fa-bed fa-3x text-secondary mb-3"></i>
+                        <h3 class="display-6" id="totalRooms">-</h3>
+                        <p class="text-muted">Rooms Available</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-0">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-check fa-3x text-accent mb-3"></i>
+                        <h3 class="display-6" id="totalBookings">-</h3>
+                        <p class="text-muted">Bookings Made</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-0">
+                    <div class="card-body">
+                        <i class="fas fa-star fa-3x text-warning mb-3"></i>
+                        <h3 class="display-6" id="totalReviews">-</h3>
+                        <p class="text-muted">Guest Reviews</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h3 class="mb-3">Ready to Experience Namibia?</h3>
+                <p class="lead mb-0">Book your perfect stay today and create unforgettable memories in one of Africa's most beautiful countries.</p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <a href="{{ url_for('main.search_hotels') }}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-calendar-plus me-2"></i>Book Now
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    $('#checkIn').attr('min', today);
+    
+    // Update check-out minimum date when check-in changes
+    $('#checkIn').on('change', function() {
+        const checkInDate = new Date($(this).val());
+        checkInDate.setDate(checkInDate.getDate() + 1);
+        $('#checkOut').attr('min', checkInDate.toISOString().split('T')[0]);
+    });
+    
+    // Handle search form submission
+    $('#searchForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const searchData = {
+            check_in: $('#checkIn').val(),
+            check_out: $('#checkOut').val(),
+            guests: parseInt($('#guests').val()),
+            city: $('#city').val()
+        };
+        
+        // Validate dates
+        if (new Date(searchData.check_out) <= new Date(searchData.check_in)) {
+            showAlert('danger', 'Check-out date must be after check-in date');
+            return;
+        }
+        
+        // Redirect to search results
+        const params = new URLSearchParams(searchData);
+        window.location.href = `/search?${params.toString()}`;
+    });
+    
+    // Load statistics
+    loadStatistics();
+});
+
+// Load statistics from API
+async function loadStatistics() {
+    try {
+        const response = await fetch('/api/stats');
+        if (response.ok) {
+            const stats = await response.json();
+            $('#totalHotels').text(stats.hotels);
+            $('#totalRooms').text(stats.rooms);
+            $('#totalBookings').text(stats.bookings);
+            $('#totalReviews').text(stats.reviews);
+        }
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+    }
+}
+</script>
+{% endblock %}
