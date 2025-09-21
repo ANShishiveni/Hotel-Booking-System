@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+
+{% block title %}{{ hotel.name }} - Namibia Hotel Booking System{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Hotel Header -->
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.hotels') }}">Hotels</a></li>
+                    <li class="breadcrumb-item active">{{ hotel.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Hotel Images -->
+        <div class="col-lg-8">
+            <div class="hotel-gallery">
+                {% if hotel.images and hotel.images|length > 0 %}
+                    <div id="hotelCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {% for image in hotel.images %}
+                            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                <img src="{{ image }}" class="d-block w-100 hotel-main-image" alt="{{ hotel.name }}">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if hotel.images|length > 1 %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#hotelCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#hotelCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" class="img-fluid hotel-main-image" alt="{{ hotel.name }}">
+                {% endif %}
+            </div>
+
+            <!-- Hotel Details -->
+            <div class="hotel-info mt-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h1 class="display-6">{{ hotel.name }}</h1>
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-map-marker-alt me-2"></i>{{ hotel.address }}, {{ hotel.city }}, {{ hotel.country }}
+                        </p>
+                        <div class="rating-stars mb-3">
+                            {% for i in range(5) %}
+                                {% if i < (hotel.star_rating or 0) %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="ms-2">{{ hotel.star_rating }}★ Hotel</span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="average-rating">
+                            {% if avg_rating %}
+                                <div class="rating-number">{{ "%.1f"|format(avg_rating) }}</div>
+                                <div class="rating-text">Excellent</div>
+                                <div class="rating-count">{{ reviews|length }} reviews</div>
+                            {% else %}
+                                <div class="rating-number">-</div>
+                                <div class="rating-text">No reviews yet</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <p class="lead">{{ hotel.description }}</p>
+
+                <!-- Hotel Amenities -->
+                {% if hotel.amenities %}
+                <div class="amenities mt-4">
+                    <h5>Amenities</h5>
+                    <div class="row">
+                        {% for amenity in hotel.amenities %}
+                        <div class="col-md-6 mb-2">
+                            <i class="fas fa-check-circle text-primary me-2"></i>{{ amenity }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Contact Information -->
+                <div class="contact-info mt-4">
+                    <h5>Contact Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><i class="fas fa-phone me-2"></i>{{ hotel.phone or 'Not provided' }}</p>
+                            <p><i class="fas fa-envelope me-2"></i>{{ hotel.email or 'Not provided' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><i class="fas fa-globe me-2"></i>{{ hotel.website or 'Not provided' }}</p>
+                            <p><i class="fas fa-clock me-2"></i>Check-in: 3:00 PM | Check-out: 11:00 AM</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Sidebar -->
+        <div class="col-lg-4">
+            <div class="booking-card">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-calendar-plus me-2"></i>Book Your Stay</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="bookingForm">
+                            <div class="mb-3">
+                                <label for="checkIn" class="form-label">Check-in Date</label>
+                                <input type="date" class="form-control" id="checkIn" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="checkOut" class="form-label">Check-out Date</label>
+                                <input type="date" class="form-control" id="checkOut" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="guests" class="form-label">Guests</label>
+                                <select class="form-select" id="guests" required>
+                                    <option value="1">1 Guest</option>
+                                    <option value="2" selected>2 Guests</option>
+                                    <option value="3">3 Guests</option>
+                                    <option value="4">4 Guests</option>
+                                    <option value="5">5+ Guests</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i>Check Availability
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Quick Contact -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-phone me-2"></i>Need Help?</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Call us for assistance with your booking or any questions.</p>
+                        <a href="tel:{{ hotel.phone }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-phone me-1"></i>{{ hotel.phone or 'Contact Hotel' }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Types -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>Available Room Types</h3>
+            <div class="row">
+                {% for room_type in room_types %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card room-type-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title">{{ room_type.name }}</h5>
+                                <span class="badge bg-primary">From ${{ room_type.base_price }}</span>
+                            </div>
+                            <p class="card-text">{{ room_type.description }}</p>
+                            
+                            <div class="room-features mb-3">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small class="text-muted">
+                                            <i class="fas fa-bed me-1"></i>{{ room_type.max_occupancy }} guests
+                                        </small>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">
+                                            <i class="fas fa-expand-arrows-alt me-1"></i>{{ room_type.size_sqm }} sqm
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if room_type.amenities %}
+                            <div class="room-amenities mb-3">
+                                <h6>Room Amenities:</h6>
+                                <div class="amenity-tags">
+                                    {% for amenity in room_type.amenities %}
+                                    <span class="badge bg-light text-dark me-1 mb-1">{{ amenity }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="room-price">
+                                    <strong class="text-primary">${{ room_type.base_price }}</strong>
+                                    <small class="text-muted">per night</small>
+                                </div>
+                                <button class="btn btn-primary btn-sm" onclick="selectRoomType({{ room_type.id }})">
+                                    Select Room
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    {% if reviews %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>Guest Reviews</h3>
+            <div class="row">
+                {% for review in reviews %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card review-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">{{ review.guest.first_name }} {{ review.guest.last_name }}</h6>
+                                    <small class="text-muted">{{ review.created_at.strftime('%B %Y') }}</small>
+                                </div>
+                                <div class="rating-stars">
+                                    {% for i in range(5) %}
+                                        {% if i < review.rating %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% else %}
+                                            <i class="far fa-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <p class="card-text">{{ review.comment }}</p>
+                            {% if review.rating_breakdown %}
+                            <div class="rating-breakdown">
+                                <small class="text-muted">
+                                    Cleanliness: {{ review.rating_breakdown.cleanliness }}/5 |
+                                    Service: {{ review.rating_breakdown.service }}/5 |
+                                    Location: {{ review.rating_breakdown.location }}/5
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.hotel-main-image {
+    height: 400px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.booking-card {
+    position: sticky;
+    top: 100px;
+}
+
+.average-rating {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.rating-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.rating-text {
+    font-size: 1.1rem;
+    color: #666;
+}
+
+.rating-count {
+    font-size: 0.9rem;
+    color: #999;
+}
+
+.room-type-card {
+    transition: transform 0.2s;
+}
+
+.room-type-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.review-card {
+    height: 100%;
+}
+
+.amenity-tags .badge {
+    font-size: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .booking-card {
+        position: static;
+        margin-top: 30px;
+    }
+    
+    .hotel-main-image {
+        height: 250px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    $('#checkIn').attr('min', today);
+    
+    // Update check-out minimum date when check-in changes
+    $('#checkIn').on('change', function() {
+        const checkInDate = new Date($(this).val());
+        checkInDate.setDate(checkInDate.getDate() + 1);
+        $('#checkOut').attr('min', checkInDate.toISOString().split('T')[0]);
+    });
+    
+    // Handle booking form submission
+    $('#bookingForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const bookingData = {
+            check_in: $('#checkIn').val(),
+            check_out: $('#checkOut').val(),
+            guests: parseInt($('#guests').val())
+        };
+        
+        // Validate dates
+        if (new Date(bookingData.check_out) <= new Date(bookingData.check_in)) {
+            showAlert('danger', 'Check-out date must be after check-in date');
+            return;
+        }
+        
+        // Check availability and proceed to booking
+        checkAvailability(bookingData);
+    });
+});
+
+function selectRoomType(roomTypeId) {
+    // Scroll to booking form and highlight
+    $('html, body').animate({
+        scrollTop: $('#bookingForm').offset().top - 100
+    }, 500);
+    
+    // Add visual feedback
+    $('#bookingForm').addClass('border-primary');
+    setTimeout(() => {
+        $('#bookingForm').removeClass('border-primary');
+    }, 2000);
+}
+
+function checkAvailability(data) {
+    // This would typically make an API call to check room availability
+    // For now, we'll redirect to a booking page
+    const params = new URLSearchParams({
+        ...data,
+        hotel_id: {{ hotel.id }}
+    });
+    
+    window.location.href = `/booking?${params.toString()}`;
+}
+
+function showAlert(type, message) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    $('body').prepend(alertHtml);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+</script>
+{% endblock %}

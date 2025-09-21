@@ -3,114 +3,166 @@
 {% block title %}Search Hotels - Namibia Hotel Booking System{% endblock %}
 
 {% block content %}
-<!-- Search Header -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h1 class="display-5 mb-3">Find Your Perfect Hotel</h1>
-                <p class="lead">Search through our extensive collection of hotels across Namibia</p>
-            </div>
+<div class="container mt-5">
+    <!-- Search Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item active">Search Hotels</li>
+                </ol>
+            </nav>
         </div>
     </div>
-</section>
 
-<!-- Search Filters -->
-<section class="py-4 bg-white border-bottom">
-    <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <form id="searchFiltersForm" class="row g-3">
-                    <div class="col-md-3">
-                        <label for="searchCheckIn" class="form-label">Check-in Date</label>
-                        <input type="date" class="form-control" id="searchCheckIn" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="searchCheckOut" class="form-label">Check-out Date</label>
-                        <input type="date" class="form-control" id="searchCheckOut" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="searchGuests" class="form-label">Guests</label>
-                        <select class="form-select" id="searchGuests" required>
-                            <option value="1">1 Guest</option>
-                            <option value="2" selected>2 Guests</option>
-                            <option value="3">3 Guests</option>
-                            <option value="4">4 Guests</option>
-                            <option value="5">5+ Guests</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="searchCity" class="form-label">City</label>
-                        <select class="form-select" id="searchCity">
-                            <option value="">All Cities</option>
-                            <option value="Windhoek">Windhoek</option>
-                            <option value="Swakopmund">Swakopmund</option>
-                            <option value="Walvis Bay">Walvis Bay</option>
-                            <option value="Ondangwa">Ondangwa</option>
-                            <option value="Rundu">Rundu</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="searchStarRating" class="form-label">Star Rating</label>
-                        <select class="form-select" id="searchStarRating">
-                            <option value="">Any</option>
-                            <option value="3">3+ Stars</option>
-                            <option value="4">4+ Stars</option>
-                            <option value="5">5 Stars</option>
-                        </select>
-                    </div>
-                </form>
+    <!-- Search Form -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="mb-4">Find Your Perfect Stay</h4>
+                    <form id="searchForm">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="checkIn" class="form-label">Check-in Date</label>
+                                <input type="date" class="form-control" id="checkIn" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="checkOut" class="form-label">Check-out Date</label>
+                                <input type="date" class="form-control" id="checkOut" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="guests" class="form-label">Guests</label>
+                                <select class="form-select" id="guests" required>
+                                    <option value="1">1 Guest</option>
+                                    <option value="2" selected>2 Guests</option>
+                                    <option value="3">3 Guests</option>
+                                    <option value="4">4 Guests</option>
+                                    <option value="5">5+ Guests</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="city" class="form-label">City</label>
+                                <select class="form-select" id="city">
+                                    <option value="">All Cities</option>
+                                    <option value="Windhoek">Windhoek</option>
+                                    <option value="Swakopmund">Swakopmund</option>
+                                    <option value="Walvis Bay">Walvis Bay</option>
+                                    <option value="Ondangwa">Ondangwa</option>
+                                    <option value="Rundu">Rundu</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>Search Hotels
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</section>
 
-<!-- Search Results -->
-<section class="py-5">
-    <div class="container">
-        <div class="row">
-            <!-- Results Header -->
-            <div class="col-12 mb-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 id="resultsTitle">Search Results</h4>
-                        <p class="text-muted mb-0" id="resultsCount">Loading...</p>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <select class="form-select" id="sortBy" style="width: auto;">
-                            <option value="relevance">Sort by Relevance</option>
-                            <option value="price_low">Price: Low to High</option>
-                            <option value="price_high">Price: High to Low</option>
-                            <option value="rating">Rating: High to Low</option>
-                            <option value="name">Name: A to Z</option>
-                        </select>
-                    </div>
+    <!-- Search Results -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>Search Results</h3>
+                <div class="search-info">
+                    <span class="text-muted" id="resultCount">Loading...</span>
                 </div>
             </div>
-            
-            <!-- Loading Spinner -->
-            <div class="col-12 text-center loading" id="loadingSpinner">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2">Searching for hotels...</p>
-            </div>
-            
-            <!-- Search Results -->
-            <div class="col-12" id="searchResults">
-                <!-- Results will be loaded here -->
-            </div>
-            
-            <!-- No Results -->
-            <div class="col-12 text-center d-none" id="noResults">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    No hotels found matching your criteria. Try adjusting your search parameters.
+
+            <!-- Results Container -->
+            <div id="searchResults">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Searching for hotels...</p>
                 </div>
             </div>
         </div>
     </div>
-</section>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.search-form .form-label {
+    color: #000 !important;
+    font-weight: 500;
+}
+
+.hotel-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    height: 100%;
+}
+
+.hotel-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.hotel-image {
+    height: 200px;
+    object-fit: cover;
+}
+
+.rating-stars {
+    color: #ffc107;
+}
+
+.price-tag {
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+}
+
+.no-results {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.no-results i {
+    font-size: 4rem;
+    color: #ccc;
+    margin-bottom: 20px;
+}
+
+.filter-sidebar {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.filter-group {
+    margin-bottom: 20px;
+}
+
+.filter-group h6 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
+}
+
+.filter-checkbox {
+    margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+    .search-form .col-md-3 {
+        margin-bottom: 15px;
+    }
+    
+    .hotel-image {
+        height: 150px;
+    }
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -118,81 +170,65 @@
 $(document).ready(function() {
     // Set minimum date to today
     const today = new Date().toISOString().split('T')[0];
-    $('#searchCheckIn').attr('min', today);
+    $('#checkIn').attr('min', today);
     
     // Update check-out minimum date when check-in changes
-    $('#searchCheckIn').on('change', function() {
+    $('#checkIn').on('change', function() {
         const checkInDate = new Date($(this).val());
         checkInDate.setDate(checkInDate.getDate() + 1);
-        $('#searchCheckOut').attr('min', checkInDate.toISOString().split('T')[0]);
+        $('#checkOut').attr('min', checkInDate.toISOString().split('T')[0]);
     });
     
-    // Handle form submission
-    $('#searchFiltersForm').on('change', function() {
+    // Handle search form submission
+    $('#searchForm').on('submit', function(e) {
+        e.preventDefault();
         performSearch();
     });
     
-    // Handle sort change
-    $('#sortBy').on('change', function() {
-        sortResults();
-    });
-    
-    // Load URL parameters if present
-    loadUrlParameters();
+    // Load search results if parameters exist in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('check_in')) {
+        loadSearchFromURL();
+    }
 });
 
-// Load parameters from URL
-function loadUrlParameters() {
+function loadSearchFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
     
-    if (urlParams.get('check_in')) {
-        $('#searchCheckIn').val(urlParams.get('check_in'));
-    }
-    if (urlParams.get('check_out')) {
-        $('#searchCheckOut').val(urlParams.get('check_out'));
-    }
-    if (urlParams.get('guests')) {
-        $('#searchGuests').val(urlParams.get('guests'));
-    }
-    if (urlParams.get('city')) {
-        $('#searchCity').val(urlParams.get('city'));
-    }
+    // Populate form fields
+    $('#checkIn').val(urlParams.get('check_in') || '');
+    $('#checkOut').val(urlParams.get('check_out') || '');
+    $('#guests').val(urlParams.get('guests') || '2');
+    $('#city').val(urlParams.get('city') || '');
     
-    // If we have search parameters, perform search
-    if (urlParams.get('check_in') && urlParams.get('check_out')) {
-        performSearch();
-    }
+    // Perform search
+    performSearch();
 }
 
-// Perform search
-async function performSearch() {
-    const checkIn = $('#searchCheckIn').val();
-    const checkOut = $('#searchCheckOut').val();
-    const guests = $('#searchGuests').val();
-    const city = $('#searchCity').val();
-    const starRating = $('#searchStarRating').val();
-    
-    if (!checkIn || !checkOut) {
-        return;
-    }
+function performSearch() {
+    const searchData = {
+        check_in: $('#checkIn').val(),
+        check_out: $('#checkOut').val(),
+        guests: parseInt($('#guests').val()),
+        city: $('#city').val()
+    };
     
     // Validate dates
-    if (new Date(checkOut) <= new Date(checkIn)) {
+    if (new Date(searchData.check_out) <= new Date(searchData.check_in)) {
         showAlert('danger', 'Check-out date must be after check-in date');
         return;
     }
     
-    showLoading(true);
+    // Update URL
+    const params = new URLSearchParams(searchData);
+    window.history.pushState({}, '', `?${params.toString()}`);
     
+    // Perform search
+    searchHotels(searchData);
+}
+
+async function searchHotels(searchData) {
     try {
-        const searchData = {
-            check_in: checkIn,
-            check_out: checkOut,
-            guests: parseInt(guests),
-            city: city,
-            star_rating: starRating ? parseInt(starRating) : null
-        };
-        
         const response = await fetch('/api/search', {
             method: 'POST',
             headers: {
@@ -202,200 +238,109 @@ async function performSearch() {
         });
         
         if (response.ok) {
-            const data = await response.json();
-            displaySearchResults(data.hotels);
+            const results = await response.json();
+            displaySearchResults(results);
         } else {
-            const error = await response.json();
-            showAlert('danger', error.error || 'Search failed');
+            throw new Error('Search failed');
         }
     } catch (error) {
-        showAlert('danger', 'Network error. Please try again.');
-    } finally {
-        showLoading(false);
+        console.error('Search error:', error);
+        displayNoResults();
     }
 }
 
-// Display search results
-function displaySearchResults(hotels) {
-    const resultsContainer = $('#searchResults');
-    const noResults = $('#noResults');
-    const resultsCount = $('#resultsCount');
+function displaySearchResults(results) {
+    const container = $('#searchResults');
+    const count = results.length;
     
-    if (hotels.length === 0) {
-        resultsContainer.empty();
-        noResults.removeClass('d-none');
-        resultsCount.text('No hotels found');
+    $('#resultCount').text(`${count} hotel${count !== 1 ? 's' : ''} found`);
+    
+    if (count === 0) {
+        displayNoResults();
         return;
     }
     
-    noResults.addClass('d-none');
-    resultsCount.text(`${hotels.length} hotel${hotels.length !== 1 ? 's' : ''} found`);
+    let html = '<div class="row">';
     
-    let html = '';
-    hotels.forEach(hotel => {
-        html += createHotelCard(hotel);
-    });
-    
-    resultsContainer.html(html);
-    window.searchResults = hotels; // Store for sorting
-}
-
-// Create hotel card HTML
-function createHotelCard(hotel) {
-    const firstImage = hotel.images && hotel.images.length > 0 
-        ? hotel.images[0] 
-        : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80';
-    
-    const averageRating = hotel.average_rating || 0;
-    const totalReviews = hotel.reviews_count || 0;
-    
-    // Get minimum price from available room types
-    const minPrice = hotel.available_room_types && hotel.available_room_types.length > 0
-        ? Math.min(...hotel.available_room_types.map(rt => rt.base_price))
-        : 0;
-    
-    return `
-        <div class="card mb-4 hotel-result-card" data-hotel-id="${hotel.id}" data-price="${minPrice}" data-rating="${averageRating}" data-name="${hotel.name}">
-            <div class="row g-0">
-                <div class="col-md-4">
-                    <img src="${firstImage}" class="img-fluid rounded-start h-100" style="object-fit: cover;" alt="${hotel.name}">
-                </div>
-                <div class="col-md-8">
-                    <div class="card-body h-100 d-flex flex-column">
+    results.forEach(hotel => {
+        html += `
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card hotel-card">
+                    <img src="${hotel.images && hotel.images.length > 0 ? hotel.images[0] : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}" 
+                         class="card-img-top hotel-image" alt="${hotel.name}">
+                    <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="card-title">${hotel.name}</h5>
-                            <div class="text-end">
-                                <span class="badge bg-primary me-2">${hotel.star_rating}★</span>
-                                <div class="h5 text-primary mb-0">
-                                    ${minPrice > 0 ? `N$${minPrice.toFixed(2)}` : 'Price on request'}
-                                    <small class="text-muted">/night</small>
-                                </div>
-                            </div>
+                            <span class="badge bg-primary">${hotel.star_rating}★</span>
                         </div>
-                        
-                        <p class="card-text text-muted mb-2">
+                        <p class="card-text text-muted">
                             <i class="fas fa-map-marker-alt me-1"></i>${hotel.city}, ${hotel.country}
                         </p>
-                        
-                        <p class="card-text">${hotel.description ? hotel.description.substring(0, 150) + '...' : 'No description available.'}</p>
-                        
-                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                        <p class="card-text">${hotel.description.substring(0, 100)}${hotel.description.length > 100 ? '...' : ''}</p>
+                        <div class="d-flex justify-content-between align-items-center">
                             <div class="rating-stars">
-                                ${generateStarRating(averageRating)}
-                                <span class="ms-1 text-muted">(${totalReviews} reviews)</span>
+                                ${generateStars(hotel.average_rating || 0)}
+                                <span class="ms-1 text-muted">(${hotel.reviews_count || 0} reviews)</span>
                             </div>
-                            
-                            <div class="d-flex gap-2">
-                                <a href="/hotel/${hotel.id}" class="btn btn-outline-primary">
-                                    View Details
-                                </a>
-                                <button class="btn btn-primary" onclick="checkAvailability(${hotel.id})">
-                                    Check Availability
-                                </button>
+                            <div class="text-end">
+                                <div class="price-tag">From $${hotel.min_price || 0}</div>
                             </div>
                         </div>
-                        
-                        ${hotel.available_room_types && hotel.available_room_types.length > 0 ? `
-                            <div class="mt-3">
-                                <small class="text-success">
-                                    <i class="fas fa-check-circle me-1"></i>
-                                    ${hotel.available_room_types.reduce((total, rt) => total + rt.available_rooms, 0)} rooms available
-                                </small>
-                            </div>
-                        ` : ''}
+                        <div class="mt-3">
+                            <a href="/hotel/${hotel.id}?${new URLSearchParams(window.location.search).toString()}" 
+                               class="btn btn-primary w-100">
+                                View Details
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    `;
-}
-
-// Generate star rating HTML
-function generateStarRating(rating) {
-    let html = '';
-    for (let i = 1; i <= 5; i++) {
-        if (i <= rating) {
-            html += '<i class="fas fa-star"></i>';
-        } else {
-            html += '<i class="far fa-star"></i>';
-        }
-    }
-    return html;
-}
-
-// Show/hide loading spinner
-function showLoading(show) {
-    const spinner = $('#loadingSpinner');
-    const results = $('#searchResults');
-    
-    if (show) {
-        spinner.removeClass('d-none');
-        results.empty();
-    } else {
-        spinner.addClass('d-none');
-    }
-}
-
-// Sort results
-function sortResults() {
-    if (!window.searchResults) return;
-    
-    const sortBy = $('#sortBy').val();
-    let sortedResults = [...window.searchResults];
-    
-    switch (sortBy) {
-        case 'price_low':
-            sortedResults.sort((a, b) => {
-                const priceA = a.available_room_types && a.available_room_types.length > 0
-                    ? Math.min(...a.available_room_types.map(rt => rt.base_price))
-                    : Infinity;
-                const priceB = b.available_room_types && b.available_room_types.length > 0
-                    ? Math.min(...b.available_room_types.map(rt => rt.base_price))
-                    : Infinity;
-                return priceA - priceB;
-            });
-            break;
-        case 'price_high':
-            sortedResults.sort((a, b) => {
-                const priceA = a.available_room_types && a.available_room_types.length > 0
-                    ? Math.min(...a.available_room_types.map(rt => rt.base_price))
-                    : 0;
-                const priceB = b.available_room_types && b.available_room_types.length > 0
-                    ? Math.min(...b.available_room_types.map(rt => rt.base_price))
-                    : 0;
-                return priceB - priceA;
-            });
-            break;
-        case 'rating':
-            sortedResults.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
-            break;
-        case 'name':
-            sortedResults.sort((a, b) => a.name.localeCompare(b.name));
-            break;
-    }
-    
-    displaySearchResults(sortedResults);
-}
-
-// Check availability for specific hotel
-function checkAvailability(hotelId) {
-    const checkIn = $('#searchCheckIn').val();
-    const checkOut = $('#searchCheckOut').val();
-    const guests = $('#searchGuests').val();
-    
-    if (!checkIn || !checkOut) {
-        showAlert('danger', 'Please select check-in and check-out dates');
-        return;
-    }
-    
-    // Redirect to hotel detail page with search parameters
-    const params = new URLSearchParams({
-        check_in: checkIn,
-        check_out: checkOut,
-        guests: guests
+        `;
     });
     
-    window.location.href = `/hotel/${hotelId}?${params.toString()}`;
+    html += '</div>';
+    container.html(html);
+}
+
+function displayNoResults() {
+    $('#resultCount').text('0 hotels found');
+    $('#searchResults').html(`
+        <div class="no-results">
+            <i class="fas fa-search"></i>
+            <h4>No hotels found</h4>
+            <p class="text-muted">Try adjusting your search criteria or dates.</p>
+            <button class="btn btn-primary" onclick="$('#searchForm')[0].scrollIntoView({behavior: 'smooth'})">
+                <i class="fas fa-edit me-2"></i>Modify Search
+            </button>
+        </div>
+    `);
+}
+
+function generateStars(rating) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= rating) {
+            stars += '<i class="fas fa-star"></i>';
+        } else {
+            stars += '<i class="far fa-star"></i>';
+        }
+    }
+    return stars;
+}
+
+function showAlert(type, message) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    $('body').prepend(alertHtml);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
 }
 </script>
 {% endblock %}

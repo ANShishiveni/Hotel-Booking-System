@@ -32,6 +32,17 @@ def create_app(config_name=None):
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
     app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
     
+    # JWT callbacks
+    @jwt.user_identity_loader
+    def user_identity_lookup(user):
+        return user.id
+    
+    @jwt.user_lookup_loader
+    def user_lookup_callback(_jwt_header, jwt_data):
+        identity = jwt_data["sub"]
+        from app.models import User
+        return User.query.filter_by(id=identity).one_or_none()
+    
     # Register blueprints
     from app.routes.auth import auth_bp
     from app.routes.hotels import hotels_bp

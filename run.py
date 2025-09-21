@@ -8,7 +8,7 @@ It can be used for development, testing, and production deployment.
 
 import os
 from app import create_app, db
-from flask_migrate import upgrade
+# from flask_migrate import upgrade  # Optional: only needed if using Flask-Migrate
 
 def create_tables():
     """Create database tables if they don't exist"""
@@ -25,15 +25,15 @@ def run_migrations():
         if not os.path.exists('migrations'):
             print("ℹ️  No migrations folder found, skipping migrations")
             return
-        upgrade()
-        print("✅ Database migrations completed successfully")
+        # upgrade()  # Commented out since Flask-Migrate is not installed
+        print("ℹ️  Migrations skipped (Flask-Migrate not installed)")
     except Exception as e:
         print(f"❌ Error running migrations: {e}")
 
 def main():
     """Main application entry point"""
     # Get configuration from environment
-    config_name = os.environ.get('FLASK_ENV', 'DevelopmentConfig')
+    config_name = 'DevelopmentConfig'  # Always use SQLite for development
     
     # Create Flask application
     app = create_app(config_name)
