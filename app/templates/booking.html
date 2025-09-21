@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+
+{% block title %}Book Room - {{ hotel.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Hero Section -->
+    <section class="hero-section bg-primary text-white py-5 mb-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 text-center">
+                    <h1 class="display-4 fw-bold">Complete Your Booking</h1>
+                    <p class="lead">{{ hotel.name }}, {{ hotel.city }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="row">
+            <!-- Booking Form -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h4 class="mb-0">Booking Details</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Hotel Info -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <h5>{{ hotel.name }}</h5>
+                                <p class="text-muted mb-2">{{ hotel.address }}, {{ hotel.city }}</p>
+                                <div class="d-flex align-items-center mb-2">
+                                    {% for i in range(hotel.star_rating) %}
+                                        <i class="fas fa-star text-warning me-1"></i>
+                                    {% endfor %}
+                                    <span class="ms-2">{{ hotel.star_rating }}-Star Hotel</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                {% if hotel.images and hotel.images[0] %}
+                                    <img src="{{ hotel.images[0] }}" alt="{{ hotel.name }}" class="img-fluid rounded" style="max-height: 120px;">
+                                {% else %}
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 120px;">
+                                        <i class="fas fa-hotel text-muted fa-3x"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Booking Summary -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6>Check-in Date</h6>
+                                <p class="fw-bold">{{ check_in }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Check-out Date</h6>
+                                <p class="fw-bold">{{ check_out }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Guests</h6>
+                                <p class="fw-bold">{{ guests }} {{ 'guest' if guests == 1 else 'guests' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Nights</h6>
+                                <p class="fw-bold" id="nights">Calculating...</p>
+                            </div>
+                        </div>
+
+                        <!-- Room Selection -->
+                        <div class="mb-4">
+                            <h5>Select Room Type</h5>
+                            <div id="roomTypes">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading room types...</span>
+                                    </div>
+                                    <p class="mt-3 text-muted">Loading available room types...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Guest Information -->
+                        <div class="mb-4">
+                            <h5>Guest Information</h5>
+                            <form id="bookingForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="firstName" class="form-label">First Name *</label>
+                                        <input type="text" class="form-control" id="firstName" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="lastName" class="form-label">Last Name *</label>
+                                        <input type="text" class="form-control" id="lastName" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">Email *</label>
+                                        <input type="email" class="form-control" id="email" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone" class="form-label">Phone *</label>
+                                        <input type="tel" class="form-control" id="phone" required>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <label for="specialRequests" class="form-label">Special Requests</label>
+                                        <textarea class="form-control" id="specialRequests" rows="3" placeholder="Any special requests or preferences?"></textarea>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Payment Information -->
+                        <div class="mb-4">
+                            <h5>Payment Information</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="cardNumber" class="form-label">Card Number *</label>
+                                    <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="expiryDate" class="form-label">Expiry Date *</label>
+                                    <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="cvv" class="form-label">CVV *</label>
+                                    <input type="text" class="form-control" id="cvv" placeholder="123" required>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="cardName" class="form-label">Name on Card *</label>
+                                    <input type="text" class="form-control" id="cardName" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="termsAccepted" required>
+                                <label class="form-check-label" for="termsAccepted">
+                                    I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a> and <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a> *
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary btn-lg" id="confirmBooking" disabled>
+                                <i class="fas fa-credit-card me-2"></i>Confirm Booking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Summary Sidebar -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Booking Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="bookingSummary">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Calculating total...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Booking Terms</h6>
+                <ul>
+                    <li>All bookings are subject to availability</li>
+                    <li>Payment is required at the time of booking</li>
+                    <li>Cancellation policy: Free cancellation up to 24 hours before check-in</li>
+                    <li>No-show policy: Full charge applies for no-shows</li>
+                    <li>Check-in time: 3:00 PM | Check-out time: 11:00 AM</li>
+                </ul>
+                
+                <h6>Hotel Policies</h6>
+                <ul>
+                    <li>Valid ID required at check-in</li>
+                    <li>Smoking is not permitted in rooms</li>
+                    <li>Pets are not allowed unless specified</li>
+                    <li>Additional charges may apply for extra services</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Policy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Privacy Policy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Information Collection</h6>
+                <p>We collect personal information necessary to process your booking and provide hotel services.</p>
+                
+                <h6>Data Usage</h6>
+                <p>Your information is used for booking confirmation, communication, and service delivery.</p>
+                
+                <h6>Data Protection</h6>
+                <p>We implement security measures to protect your personal information.</p>
+                
+                <h6>Contact</h6>
+                <p>For privacy concerns, contact us at privacy@namibiahotels.com</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calculate nights
+    const checkIn = new Date('{{ check_in }}');
+    const checkOut = new Date('{{ check_out }}');
+    const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+    document.getElementById('nights').textContent = nights + ' ' + (nights === 1 ? 'night' : 'nights');
+    
+    // Load room types
+    loadRoomTypes();
+    
+    // Load user profile if logged in
+    loadUserProfile();
+    
+    // Enable/disable confirm button based on form completion
+    const confirmBtn = document.getElementById('confirmBooking');
+    const termsCheckbox = document.getElementById('termsAccepted');
+    
+    function checkFormCompletion() {
+        const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'cardNumber', 'expiryDate', 'cvv', 'cardName'];
+        const allFilled = requiredFields.every(field => document.getElementById(field).value.trim() !== '');
+        const termsAccepted = termsCheckbox.checked;
+        const roomSelected = document.querySelector('input[name="roomType"]:checked');
+        
+        confirmBtn.disabled = !(allFilled && termsAccepted && roomSelected);
+    }
+    
+    // Add event listeners
+    document.querySelectorAll('#bookingForm input, #bookingForm textarea').forEach(input => {
+        input.addEventListener('input', checkFormCompletion);
+    });
+    termsCheckbox.addEventListener('change', checkFormCompletion);
+    
+    // Confirm booking
+    confirmBtn.addEventListener('click', function() {
+        if (!confirmBtn.disabled) {
+            processBooking();
+        }
+    });
+});
+
+function loadRoomTypes() {
+    fetch(`/api/hotels/{{ hotel.id }}/availability?check_in={{ check_in }}&check_out={{ check_out }}&guests={{ guests }}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.availability && data.availability.length > 0) {
+                displayRoomTypes(data.availability);
+                updateBookingSummary(data.availability[0]); // Default to first room type
+            } else {
+                document.getElementById('roomTypes').innerHTML = '<div class="alert alert-warning">No rooms available for the selected dates.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading room types:', error);
+            document.getElementById('roomTypes').innerHTML = '<div class="alert alert-danger">Error loading room types. Please try again.</div>';
+        });
+}
+
+function displayRoomTypes(roomTypes) {
+    const container = document.getElementById('roomTypes');
+    container.innerHTML = '';
+    
+    roomTypes.forEach((roomType, index) => {
+        const div = document.createElement('div');
+        div.className = 'card mb-3';
+        div.innerHTML = `
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="roomType" id="roomType${index}" value="${roomType.id}" ${index === 0 ? 'checked' : ''}>
+                            <label class="form-check-label" for="roomType${index}">
+                                <h6 class="mb-1">${roomType.name}</h6>
+                                <p class="text-muted mb-1">${roomType.description || 'Comfortable accommodation'}</p>
+                                <small class="text-muted">
+                                    Max ${roomType.max_occupancy} guests
+                                    ${roomType.size_sqm ? ` • ${roomType.size_sqm} sqm` : ''}
+                                </small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <h5 class="text-primary mb-1">N$${roomType.base_price.toFixed(2)}</h5>
+                        <small class="text-muted">per night</small>
+                        <div class="mt-2">
+                            <span class="badge bg-success">${roomType.available_rooms} available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+        
+        // Add event listener for room type selection
+        div.querySelector('input[type="radio"]').addEventListener('change', function() {
+            if (this.checked) {
+                updateBookingSummary(roomType);
+                checkFormCompletion();
+            }
+        });
+    });
+}
+
+function updateBookingSummary(roomType) {
+    const checkIn = new Date('{{ check_in }}');
+    const checkOut = new Date('{{ check_out }}');
+    const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+    
+    const subtotal = roomType.base_price * nights;
+    const tax = subtotal * 0.15; // 15% VAT
+    const total = subtotal + tax;
+    
+    document.getElementById('bookingSummary').innerHTML = `
+        <div class="d-flex justify-content-between mb-2">
+            <span>Room (${nights} nights)</span>
+            <span>N$${subtotal.toFixed(2)}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+            <span>VAT (15%)</span>
+            <span>N$${tax.toFixed(2)}</span>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between">
+            <strong>Total</strong>
+            <strong>N$${total.toFixed(2)}</strong>
+        </div>
+    `;
+}
+
+function loadUserProfile() {
+    fetch('/api/auth/profile')
+        .then(response => response.json())
+        .then(data => {
+            if (data.user) {
+                document.getElementById('firstName').value = data.user.first_name || '';
+                document.getElementById('lastName').value = data.user.last_name || '';
+                document.getElementById('email').value = data.user.email || '';
+                document.getElementById('phone').value = data.user.phone || '';
+            }
+        })
+        .catch(error => console.error('Error loading user profile:', error));
+}
+
+function processBooking() {
+    const selectedRoomType = document.querySelector('input[name="roomType"]:checked');
+    if (!selectedRoomType) {
+        alert('Please select a room type');
+        return;
+    }
+    
+    const bookingData = {
+        hotel_id: {{ hotel.id }},
+        room_type_id: selectedRoomType.value,
+        check_in_date: '{{ check_in }}',
+        check_out_date: '{{ check_out }}',
+        adults: {{ guests }},
+        children: 0,
+        guest_info: {
+            first_name: document.getElementById('firstName').value,
+            last_name: document.getElementById('lastName').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            special_requests: document.getElementById('specialRequests').value
+        },
+        payment_info: {
+            card_number: document.getElementById('cardNumber').value,
+            expiry_date: document.getElementById('expiryDate').value,
+            cvv: document.getElementById('cvv').value,
+            card_name: document.getElementById('cardName').value
+        }
+    };
+    
+    // Show loading state
+    const confirmBtn = document.getElementById('confirmBooking');
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    confirmBtn.disabled = true;
+    
+    fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirect to booking confirmation page
+            window.location.href = `/bookings/${data.booking_id}`;
+        } else {
+            alert('Booking failed: ' + (data.error || 'Unknown error'));
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Booking error:', error);
+        alert('Booking failed. Please try again.');
+        confirmBtn.innerHTML = originalText;
+        confirmBtn.disabled = false;
+    });
+}
+</script>
+{% endblock %}

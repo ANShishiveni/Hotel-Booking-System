@@ -13,6 +13,7 @@ def index():
     try:
         # Get featured hotels (highest rated, active)
         try:
+            # Get hotels with reviews first
             featured_hotels = db.session.query(Hotel)\
                 .filter(Hotel.is_active == True)\
                 .outerjoin(Review, and_(Review.hotel_id == Hotel.id, Review.is_active == True))\
@@ -20,11 +21,14 @@ def index():
                 .having(func.avg(Review.rating).isnot(None))\
                 .order_by(desc(func.avg(Review.rating)))\
                 .limit(6).all()
-        except:
-            featured_hotels = []
-        
-        # If no hotels with reviews, get any active hotels
-        if not featured_hotels:
+            
+            # If no hotels with reviews, get any active hotels
+            if not featured_hotels:
+                featured_hotels = Hotel.query.filter_by(is_active=True).limit(6).all()
+                
+        except Exception as e:
+            current_app.logger.error(f"Error loading featured hotels: {str(e)}")
+            # Fallback to simple query
             featured_hotels = Hotel.query.filter_by(is_active=True).limit(6).all()
         
         return render_template('index.html', hotels=featured_hotels)
@@ -104,7 +108,7 @@ def hotel_detail(hotel_id):
 
 @main_bp.route('/api/search', methods=['POST'])
 def api_search():
-    """API endpoint for hotel search with availability"""
+    """Optimized API endpoint for hotel search with availability"""
     try:
         data = request.get_json()
         
@@ -112,69 +116,78 @@ def api_search():
         if not data or not all(k in data for k in ['check_in', 'check_out', 'guests']):
             return jsonify({'error': 'Missing required fields'}), 400
         
-        check_in = datetime.strptime(data['check_in'], '%Y-%m-%d').date()
-        check_out = datetime.strptime(data['check_out'], '%Y-%m-%d').date()
+        check_in = data['check_in']
+        check_out = data['check_out']
         guests = data['guests']
         city = data.get('city', '')
         
         # Validate dates
-        if check_out <= check_in:
+        check_in_date = datetime.strptime(check_in, '%Y-%m-%d').date()
+        check_out_date = datetime.strptime(check_out, '%Y-%m-%d').date()
+        
+        if check_out_date <= check_in_date:
             return jsonify({'error': 'Check-out date must be after check-in date'}), 400
         
-        if check_in < date.today():
+        if check_in_date < date.today():
             return jsonify({'error': 'Check-in date cannot be in the past'}), 400
         
-        # Build availability query
-        query = db.session.query(Hotel, RoomType)\
-            .join(RoomType, RoomType.hotel_id == Hotel.id)\
-            .filter(
-                Hotel.is_active == True,
-                RoomType.is_active == True,
-                RoomType.max_occupancy >= guests
-            )
-        
-        # Apply city filter
-        if city:
-            query = query.filter(Hotel.city.ilike(f'%{city}%'))
-        
-        # Check room availability for the date range
+        # Simplified but optimized search
+        # Get hotels with available rooms using a single query with joins
         available_hotels = []
-        for hotel, room_type in query.all():
-            # Count available rooms for this type
-            available_rooms = db.session.query(Room)\
-                .join(Booking, and_(
-                    Booking.room_id == Room.id,
-                    or_(
-                        and_(Booking.check_in_date <= check_in, Booking.check_out_date > check_in),
-                        and_(Booking.check_in_date < check_out, Booking.check_out_date >= check_out),
-                        and_(Booking.check_in_date >= check_in, Booking.check_out_date <= check_out)
-                    ),
-                    Booking.status.in_(['confirmed', 'checked_in'])
-                ), isouter=True)\
-                .filter(
-                    Room.room_type_id == room_type.id,
-                    Room.is_active == True,
-                    Booking.id.is_(None)
-                ).count()
+        
+        # Get all hotels that match the criteria
+        hotels = Hotel.query.filter_by(is_active=True)
+        if city:
+            hotels = hotels.filter(Hotel.city.ilike(f'%{city}%'))
+        
+        for hotel in hotels:
+            # Get room types for this hotel
+            room_types = RoomType.query.filter_by(
+                hotel_id=hotel.id,
+                is_active=True
+            ).filter(RoomType.max_occupancy >= guests).all()
             
-            if available_rooms > 0:
-                hotel_dict = hotel.to_dict()
-                room_type_dict = room_type.to_dict()
-                room_type_dict['available_rooms'] = available_rooms
-                hotel_dict['available_room_types'] = [room_type_dict]
+            hotel_room_types = []
+            min_price = float('inf')
+            
+            for room_type in room_types:
+                # Count available rooms for this room type
+                available_rooms = db.session.query(Room)\
+                    .outerjoin(Booking, and_(
+                        Booking.room_id == Room.id,
+                        Booking.status.in_(['confirmed', 'checked_in']),
+                        or_(
+                            and_(Booking.check_in_date <= check_in_date, Booking.check_out_date > check_in_date),
+                            and_(Booking.check_in_date < check_out_date, Booking.check_out_date >= check_out_date),
+                            and_(Booking.check_in_date >= check_in_date, Booking.check_out_date <= check_out_date)
+                        )
+                    ))\
+                    .filter(
+                        Room.room_type_id == room_type.id,
+                        Room.is_active == True,
+                        Booking.id.is_(None)
+                    ).count()
                 
-                # Check if hotel already in results
-                existing_hotel = next((h for h in available_hotels if h['id'] == hotel.id), None)
-                if existing_hotel:
-                    existing_hotel['available_room_types'].append(room_type_dict)
-                else:
-                    available_hotels.append(hotel_dict)
+                if available_rooms > 0:
+                    room_type_dict = room_type.to_dict()
+                    room_type_dict['available_rooms'] = available_rooms
+                    hotel_room_types.append(room_type_dict)
+                    min_price = min(min_price, float(room_type.base_price))
+            
+            if hotel_room_types:
+                hotel_dict = hotel.to_dict()
+                hotel_dict['available_room_types'] = hotel_room_types
+                hotel_dict['min_price'] = min_price
+                available_hotels.append(hotel_dict)
+        
+        # Sort by minimum price
+        available_hotels.sort(key=lambda x: x['min_price'])
         
         return jsonify({
             'hotels': available_hotels,
             'search_params': {
-                'check_in': check_in.isoformat(),
-                'check_out': check_out.isoformat(),
+                'check_in': check_in_date.isoformat(),
+                'check_out': check_out_date.isoformat(),
                 'guests': guests,
                 'city': city
             }
@@ -287,6 +300,48 @@ def contact_submit():
             'success': False,
             'error': 'An error occurred while processing your message. Please try again.'
         }), 500
+
+@main_bp.route('/booking')
+def booking_page():
+    """Booking page for making reservations"""
+    try:
+        # Get booking parameters from query string
+        check_in = request.args.get('check_in')
+        check_out = request.args.get('check_out')
+        guests = request.args.get('guests', type=int)
+        hotel_id = request.args.get('hotel_id', type=int)
+        room_type_id = request.args.get('room_type_id', type=int)
+        
+        # Validate required parameters
+        if not all([check_in, check_out, guests, hotel_id]):
+            return render_template('error.html', error="Missing booking parameters")
+        
+        # Get hotel and room type information
+        hotel = Hotel.query.get_or_404(hotel_id)
+        room_type = None
+        
+        if room_type_id:
+            room_type = RoomType.query.get_or_404(room_type_id)
+        
+        return render_template('booking.html', 
+                             hotel=hotel,
+                             room_type=room_type,
+                             check_in=check_in,
+                             check_out=check_out,
+                             guests=guests)
+    except Exception as e:
+        current_app.logger.error(f"Error loading booking page: {str(e)}")
+        return render_template('error.html', error="Booking page not available")
+
+@main_bp.route('/profile')
+def profile_page():
+    """User profile page"""
+    return render_template('profile.html')
+
+@main_bp.route('/my-bookings')
+def my_bookings_page():
+    """User's bookings page"""
+    return render_template('my_bookings.html')
 
 @main_bp.route('/about')
 def about():

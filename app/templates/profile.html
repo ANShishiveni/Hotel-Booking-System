@@ -1,0 +1,609 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - Namibia Hotels{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Hero Section -->
+    <section class="hero-section bg-primary text-white py-5 mb-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 text-center">
+                    <h1 class="display-4 fw-bold">My Profile</h1>
+                    <p class="lead">Manage your account information and preferences</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="row">
+            <!-- Profile Sidebar -->
+            <div class="col-lg-3">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                <i class="fas fa-user text-white fa-2x"></i>
+                            </div>
+                        </div>
+                        <h5 id="userName">Loading...</h5>
+                        <p class="text-muted" id="userEmail">Loading...</p>
+                        <div class="mt-3">
+                            <span class="badge bg-success" id="memberSince">Member since 2025</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <div class="card shadow-sm mt-3">
+                    <div class="list-group list-group-flush">
+                        <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="pill">
+                            <i class="fas fa-user me-2"></i>Profile Information
+                        </a>
+                        <a href="#bookings" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                            <i class="fas fa-calendar-check me-2"></i>My Bookings
+                        </a>
+                        <a href="#preferences" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                            <i class="fas fa-cog me-2"></i>Preferences
+                        </a>
+                        <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                            <i class="fas fa-shield-alt me-2"></i>Security
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Content -->
+            <div class="col-lg-9">
+                <div class="tab-content">
+                    <!-- Profile Information Tab -->
+                    <div class="tab-pane fade show active" id="profile">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Profile Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="profileForm">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="firstName" class="form-label">First Name</label>
+                                            <input type="text" class="form-control" id="firstName" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="lastName" class="form-label">Last Name</label>
+                                            <input type="text" class="form-control" id="lastName" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="email" class="form-label">Email Address</label>
+                                            <input type="email" class="form-control" id="email" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="phone" class="form-label">Phone Number</label>
+                                            <input type="tel" class="form-control" id="phone">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="username" class="form-label">Username</label>
+                                            <input type="text" class="form-control" id="username" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                                            <input type="date" class="form-control" id="dateOfBirth">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="nationality" class="form-label">Nationality</label>
+                                            <select class="form-select" id="nationality">
+                                                <option value="">Select Nationality</option>
+                                                <option value="Namibian">Namibian</option>
+                                                <option value="South African">South African</option>
+                                                <option value="Botswanan">Botswanan</option>
+                                                <option value="Zambian">Zambian</option>
+                                                <option value="Zimbabwean">Zimbabwean</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="preferredLanguage" class="form-label">Preferred Language</label>
+                                            <select class="form-select" id="preferredLanguage">
+                                                <option value="en">English</option>
+                                                <option value="af">Afrikaans</option>
+                                                <option value="de">German</option>
+                                                <option value="pt">Portuguese</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <label for="address" class="form-label">Address</label>
+                                            <textarea class="form-control" id="address" rows="3" placeholder="Enter your full address"></textarea>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <button type="button" class="btn btn-outline-secondary" id="cancelProfile">
+                                            <i class="fas fa-times me-2"></i>Cancel
+                                        </button>
+                                        <button type="submit" class="btn btn-primary" id="saveProfile">
+                                            <i class="fas fa-save me-2"></i>Save Changes
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- My Bookings Tab -->
+                    <div class="tab-pane fade" id="bookings">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">My Bookings</h5>
+                                <a href="/my-bookings" class="btn btn-outline-primary btn-sm">View All</a>
+                            </div>
+                            <div class="card-body">
+                                <div id="recentBookings">
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-3 text-muted">Loading your bookings...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preferences Tab -->
+                    <div class="tab-pane fade" id="preferences">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Preferences</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="preferencesForm">
+                                    <div class="mb-4">
+                                        <h6>Communication Preferences</h6>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                                            <label class="form-check-label" for="emailNotifications">
+                                                Email notifications for bookings and updates
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="smsNotifications">
+                                            <label class="form-check-label" for="smsNotifications">
+                                                SMS notifications for urgent updates
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="marketingEmails">
+                                            <label class="form-check-label" for="marketingEmails">
+                                                Receive marketing emails and special offers
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <h6>Booking Preferences</h6>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="preferredRoomType" class="form-label">Preferred Room Type</label>
+                                                <select class="form-select" id="preferredRoomType">
+                                                    <option value="">No preference</option>
+                                                    <option value="standard">Standard Room</option>
+                                                    <option value="deluxe">Deluxe Room</option>
+                                                    <option value="suite">Suite</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="preferredFloor" class="form-label">Preferred Floor</label>
+                                                <select class="form-select" id="preferredFloor">
+                                                    <option value="">No preference</option>
+                                                    <option value="high">High floor</option>
+                                                    <option value="low">Low floor</option>
+                                                    <option value="middle">Middle floor</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <h6>Dietary Preferences</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="vegetarian">
+                                                    <label class="form-check-label" for="vegetarian">Vegetarian</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="vegan">
+                                                    <label class="form-check-label" for="vegan">Vegan</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="glutenFree">
+                                                    <label class="form-check-label" for="glutenFree">Gluten-Free</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="halal">
+                                                    <label class="form-check-label" for="halal">Halal</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Save Preferences
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div class="tab-pane fade" id="security">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Security Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="securityForm">
+                                    <div class="mb-4">
+                                        <h6>Change Password</h6>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="currentPassword" class="form-label">Current Password</label>
+                                                <input type="password" class="form-control" id="currentPassword">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="newPassword" class="form-label">New Password</label>
+                                                <input type="password" class="form-control" id="newPassword">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                                <input type="password" class="form-control" id="confirmPassword">
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-warning" id="changePassword">
+                                            <i class="fas fa-key me-2"></i>Change Password
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <h6>Two-Factor Authentication</h6>
+                                        <p class="text-muted">Add an extra layer of security to your account</p>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="twoFactorEnabled">
+                                            <label class="form-check-label" for="twoFactorEnabled">
+                                                Enable Two-Factor Authentication
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <h6>Account Security</h6>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span>Last login</span>
+                                            <span class="text-muted" id="lastLogin">Loading...</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span>Account created</span>
+                                            <span class="text-muted" id="accountCreated">Loading...</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>Email verified</span>
+                                            <span class="badge bg-success" id="emailVerified">Yes</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Save Security Settings
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load user profile data
+    loadUserProfile();
+    loadRecentBookings();
+    
+    // Profile form submission
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveProfile();
+    });
+    
+    // Preferences form submission
+    document.getElementById('preferencesForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        savePreferences();
+    });
+    
+    // Security form submission
+    document.getElementById('securityForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveSecuritySettings();
+    });
+    
+    // Change password
+    document.getElementById('changePassword').addEventListener('click', function() {
+        changePassword();
+    });
+    
+    // Cancel profile changes
+    document.getElementById('cancelProfile').addEventListener('click', function() {
+        loadUserProfile();
+    });
+});
+
+function loadUserProfile() {
+    fetch('/api/auth/profile')
+        .then(response => response.json())
+        .then(data => {
+            if (data.user) {
+                const user = data.user;
+                
+                // Update sidebar
+                document.getElementById('userName').textContent = `${user.first_name} ${user.last_name}`;
+                document.getElementById('userEmail').textContent = user.email;
+                
+                // Update form fields
+                document.getElementById('firstName').value = user.first_name || '';
+                document.getElementById('lastName').value = user.last_name || '';
+                document.getElementById('email').value = user.email || '';
+                document.getElementById('phone').value = user.phone || '';
+                document.getElementById('username').value = user.username || '';
+                
+                // Update security info
+                if (user.last_login) {
+                    document.getElementById('lastLogin').textContent = new Date(user.last_login).toLocaleDateString();
+                }
+                if (user.created_at) {
+                    document.getElementById('accountCreated').textContent = new Date(user.created_at).toLocaleDateString();
+                }
+                document.getElementById('emailVerified').textContent = user.email_verified ? 'Yes' : 'No';
+                document.getElementById('emailVerified').className = user.email_verified ? 'badge bg-success' : 'badge bg-warning';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading user profile:', error);
+            // Redirect to login if not authenticated
+            window.location.href = '/login';
+        });
+}
+
+function loadRecentBookings() {
+    fetch('/api/auth/bookings?limit=5')
+        .then(response => response.json())
+        .then(data => {
+            if (data.bookings && data.bookings.length > 0) {
+                displayRecentBookings(data.bookings);
+            } else {
+                document.getElementById('recentBookings').innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times text-muted fa-3x mb-3"></i>
+                        <h6>No bookings yet</h6>
+                        <p class="text-muted">Start exploring our hotels!</p>
+                        <a href="/search" class="btn btn-primary">Search Hotels</a>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading bookings:', error);
+            document.getElementById('recentBookings').innerHTML = `
+                <div class="alert alert-warning">Unable to load bookings. Please try again later.</div>
+            `;
+        });
+}
+
+function displayRecentBookings(bookings) {
+    const container = document.getElementById('recentBookings');
+    container.innerHTML = '';
+    
+    bookings.forEach(booking => {
+        const div = document.createElement('div');
+        div.className = 'border-bottom pb-3 mb-3';
+        div.innerHTML = `
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h6 class="mb-1">${booking.hotel_name}</h6>
+                    <p class="text-muted mb-1">
+                        ${new Date(booking.check_in_date).toLocaleDateString()} - ${new Date(booking.check_out_date).toLocaleDateString()}
+                    </p>
+                    <small class="text-muted">Booking #${booking.booking_reference}</small>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge ${getStatusBadgeClass(booking.status)}">${booking.status}</span>
+                    <div class="mt-2">
+                        <strong>N$${booking.total_amount}</strong>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function getStatusBadgeClass(status) {
+    switch(status.toLowerCase()) {
+        case 'confirmed': return 'bg-success';
+        case 'pending': return 'bg-warning';
+        case 'cancelled': return 'bg-danger';
+        case 'checked_in': return 'bg-info';
+        case 'checked_out': return 'bg-secondary';
+        default: return 'bg-light text-dark';
+    }
+}
+
+function saveProfile() {
+    const formData = {
+        first_name: document.getElementById('firstName').value,
+        last_name: document.getElementById('lastName').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        username: document.getElementById('username').value
+    };
+    
+    fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Profile updated successfully!', 'success');
+            loadUserProfile();
+        } else {
+            showAlert('Failed to update profile: ' + (data.error || 'Unknown error'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating profile:', error);
+        showAlert('Failed to update profile. Please try again.', 'danger');
+    });
+}
+
+function savePreferences() {
+    const formData = {
+        email_notifications: document.getElementById('emailNotifications').checked,
+        sms_notifications: document.getElementById('smsNotifications').checked,
+        marketing_emails: document.getElementById('marketingEmails').checked,
+        preferred_room_type: document.getElementById('preferredRoomType').value,
+        preferred_floor: document.getElementById('preferredFloor').value,
+        dietary_preferences: {
+            vegetarian: document.getElementById('vegetarian').checked,
+            vegan: document.getElementById('vegan').checked,
+            gluten_free: document.getElementById('glutenFree').checked,
+            halal: document.getElementById('halal').checked
+        }
+    };
+    
+    fetch('/api/auth/preferences', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Preferences saved successfully!', 'success');
+        } else {
+            showAlert('Failed to save preferences: ' + (data.error || 'Unknown error'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving preferences:', error);
+        showAlert('Failed to save preferences. Please try again.', 'danger');
+    });
+}
+
+function saveSecuritySettings() {
+    const formData = {
+        two_factor_enabled: document.getElementById('twoFactorEnabled').checked
+    };
+    
+    fetch('/api/auth/security', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Security settings updated successfully!', 'success');
+        } else {
+            showAlert('Failed to update security settings: ' + (data.error || 'Unknown error'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating security settings:', error);
+        showAlert('Failed to update security settings. Please try again.', 'danger');
+    });
+}
+
+function changePassword() {
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        showAlert('Please fill in all password fields', 'warning');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showAlert('New passwords do not match', 'warning');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showAlert('New password must be at least 6 characters long', 'warning');
+        return;
+    }
+    
+    fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Password changed successfully!', 'success');
+            // Clear password fields
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        } else {
+            showAlert('Failed to change password: ' + (data.error || 'Unknown error'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error changing password:', error);
+        showAlert('Failed to change password. Please try again.', 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    // Create alert element
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insert at top of content
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

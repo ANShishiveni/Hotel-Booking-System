@@ -82,6 +82,7 @@
                         <span class="visually-hidden">Loading...</span>
                     </div>
                     <p class="mt-3 text-muted">Searching for hotels...</p>
+                    <small class="text-muted">This may take a few seconds for the first search</small>
                 </div>
             </div>
         </div>
@@ -238,8 +239,8 @@ async function searchHotels(searchData) {
         });
         
         if (response.ok) {
-            const results = await response.json();
-            displaySearchResults(results);
+            const data = await response.json();
+            displaySearchResults(data.hotels || data);
         } else {
             throw new Error('Search failed');
         }

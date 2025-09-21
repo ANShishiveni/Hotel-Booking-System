@@ -27,6 +27,10 @@ class Config:
     # Rate limiting
     RATELIMIT_STORAGE_URL = os.environ.get('REDIS_URL') or 'memory://'
     
+    # Caching
+    CACHE_TYPE = 'simple'  # Use simple in-memory cache for development
+    CACHE_DEFAULT_TIMEOUT = 300  # 5 minutes default cache timeout
+    
     # Timezone
     TIMEZONE = os.environ.get('TIMEZONE') or 'Africa/Windhoek'
 

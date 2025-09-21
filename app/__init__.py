@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 from flask_cors import CORS
+from flask_caching import Cache
 from datetime import timedelta
 import os
 
@@ -11,6 +12,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 mail = Mail()
+cache = Cache()
 
 def create_app(config_name=None):
     app = Flask(__name__)
@@ -26,7 +28,11 @@ def create_app(config_name=None):
     migrate.init_app(app, db)
     jwt.init_app(app)
     mail.init_app(app)
+    cache.init_app(app)
     CORS(app)
+    
+    # Make cache available as app.cache
+    app.cache = cache
     
     # Configure JWT
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)

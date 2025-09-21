@@ -49,6 +49,12 @@ class User(db.Model):
     bookings = db.relationship('Booking', backref='user', lazy='dynamic')
     reviews = db.relationship('Review', backref='user', lazy='dynamic')
     
+    # Performance indexes
+    __table_args__ = (
+        Index('idx_user_email_active', 'email', 'is_active'),
+        Index('idx_user_created_at', 'created_at'),
+    )
+    
     def set_password(self, password):
         """Hash and set password"""
         self.password_hash = generate_password_hash(password)
@@ -117,11 +123,13 @@ class Hotel(db.Model):
     room_types = db.relationship('RoomType', backref='hotel', lazy='dynamic', cascade='all, delete-orphan')
     reviews = db.relationship('Review', backref='hotel', lazy='dynamic')
     
-    # Indexes
+    # Performance indexes
     __table_args__ = (
-        Index('idx_hotel_city', 'city'),
-        Index('idx_hotel_country', 'country'),
-        Index('idx_hotel_star_rating', 'star_rating'),
+        Index('idx_hotel_city_active', 'city', 'is_active'),
+        Index('idx_hotel_country_active', 'country', 'is_active'),
+        Index('idx_hotel_star_rating_active', 'star_rating', 'is_active'),
+        Index('idx_hotel_name_active', 'name', 'is_active'),
+        Index('idx_hotel_created_at', 'created_at'),
     )
     
     def to_dict(self):
@@ -224,10 +232,11 @@ class Room(db.Model):
     # Relationships
     bookings = db.relationship('Booking', backref='room', lazy='dynamic')
     
-    # Constraints
+    # Performance indexes
     __table_args__ = (
         db.UniqueConstraint('hotel_id', 'room_number', name='unique_room_per_hotel'),
-        Index('idx_room_hotel_type', 'hotel_id', 'room_type_id'),
+        Index('idx_room_hotel_type_active', 'hotel_id', 'room_type_id', 'is_active'),
+        Index('idx_room_type_active', 'room_type_id', 'is_active'),
     )
     
     def to_dict(self):
