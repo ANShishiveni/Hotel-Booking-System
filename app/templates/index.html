@@ -10,7 +10,7 @@
             <div class="col-lg-6">
                 <h1 class="display-4 mb-4">Welcome to Namibia's Premier Hotel Booking Experience</h1>
                 <p class="lead mb-4">Discover luxury accommodations across Namibia's most beautiful destinations. From the bustling capital of Windhoek to the stunning landscapes of Swakopmund and beyond.</p>
-                <a href="{{ url_for('main.search_hotels') }}" class="btn btn-secondary btn-lg me-3">
+                <a href="{{ url_for('main.hotels') }}" class="btn btn-secondary btn-lg me-3">
                     <i class="fas fa-search me-2"></i>Find Hotels
                 </a>
                 <a href="{{ url_for('main.hotels') }}" class="btn btn-outline-light btn-lg">
@@ -140,7 +140,7 @@
                                         <i class="far fa-star"></i>
                                     {% endif %}
                                 {% endfor %}
-                                <span class="ms-1 text-muted">({{ hotel.reviews|length }} reviews)</span>
+                                <span class="ms-1 text-muted">({{ hotel.reviews.count() }} reviews)</span>
                             </div>
                             <a href="{{ url_for('main.hotel_detail', hotel_id=hotel.id) }}" class="btn btn-primary">
                                 View Details

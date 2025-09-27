@@ -70,41 +70,158 @@
 
                         <!-- Room Selection -->
                         <div class="mb-4">
-                            <h5>Select Room Type</h5>
+                            <h5>Selected Room Type</h5>
                             <div id="roomTypes">
+                                {% if room_type %}
+                                <!-- Pre-selected room type from search -->
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-8">
+                                                <h6 class="text-primary mb-2">{{ room_type.name }}</h6>
+                                                <p class="text-muted mb-2">{{ room_type.description }}</p>
+                                                <div class="d-flex flex-wrap gap-2">
+                                                    <span class="badge bg-light text-dark">
+                                                        <i class="fas fa-users me-1"></i>Max {{ room_type.max_occupancy }} guests
+                                                    </span>
+                                                    {% if room_type.bed_type %}
+                                                    <span class="badge bg-light text-dark">
+                                                        <i class="fas fa-bed me-1"></i>{{ room_type.bed_type }}
+                                                    </span>
+                                                    {% endif %}
+                                                    {% if room_type.room_size %}
+                                                    <span class="badge bg-light text-dark">
+                                                        <i class="fas fa-expand-arrows-alt me-1"></i>{{ room_type.room_size }}m²
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 text-end">
+                                                <div class="h5 text-primary mb-2">N${{ room_type.base_price }}/night</div>
+                                                <small class="text-muted">Selected from search</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="selectedRoomTypeId" value="{{ room_type.id }}">
+                                {% else %}
+                                <!-- Load available room types -->
                                 <div class="text-center py-4">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Loading room types...</span>
                                     </div>
                                     <p class="mt-3 text-muted">Loading available room types...</p>
+                                    <small class="text-muted">This usually takes 1-2 seconds</small>
                                 </div>
+                                {% endif %}
                             </div>
                         </div>
 
                         <!-- Guest Information -->
                         <div class="mb-4">
                             <h5>Guest Information</h5>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Important:</strong> Please ensure all guest information is accurate as it will be used for check-in.
+                            </div>
+                            
                             <form id="bookingForm">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="firstName" class="form-label">First Name *</label>
-                                        <input type="text" class="form-control" id="firstName" required>
+                                <!-- Primary Guest Information -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0"><i class="fas fa-user me-2"></i>Primary Guest (Booking Contact)</h6>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="lastName" class="form-label">Last Name *</label>
-                                        <input type="text" class="form-control" id="lastName" required>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="firstName" class="form-label">First Name *</label>
+                                                <input type="text" class="form-control" id="firstName" required>
+                                                <div class="invalid-feedback">Please enter your first name.</div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="lastName" class="form-label">Last Name *</label>
+                                                <input type="text" class="form-control" id="lastName" required>
+                                                <div class="invalid-feedback">Please enter your last name.</div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="email" class="form-label">Email Address *</label>
+                                                <input type="email" class="form-control" id="email" required>
+                                                <div class="invalid-feedback">Please enter a valid email address.</div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="phone" class="form-label">Phone Number *</label>
+                                                <input type="tel" class="form-control" id="phone" required>
+                                                <div class="invalid-feedback">Please enter your phone number.</div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                                                <input type="date" class="form-control" id="dateOfBirth">
+                                                <small class="form-text text-muted">Required for some hotels</small>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="nationality" class="form-label">Nationality</label>
+                                                <select class="form-select" id="nationality">
+                                                    <option value="">Select Nationality</option>
+                                                    <option value="Namibian" selected>Namibian</option>
+                                                    <option value="South African">South African</option>
+                                                    <option value="German">German</option>
+                                                    <option value="British">British</option>
+                                                    <option value="American">American</option>
+                                                    <option value="French">French</option>
+                                                    <option value="Italian">Italian</option>
+                                                    <option value="Dutch">Dutch</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="email" class="form-label">Email *</label>
-                                        <input type="email" class="form-control" id="email" required>
+                                </div>
+
+                                <!-- Additional Guest Information (if more than 1 guest) -->
+                                <div id="additionalGuestsSection" style="display: none;">
+                                    <h6 class="mb-3">Additional Guests</h6>
+                                    <div id="additionalGuests"></div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="addGuestBtn">
+                                        <i class="fas fa-plus me-1"></i>Add Another Guest
+                                    </button>
+                                </div>
+
+                                <!-- Special Requests and Notes -->
+                                <div class="mb-4">
+                                    <label for="specialRequests" class="form-label">Special Requests</label>
+                                    <textarea class="form-control" id="specialRequests" rows="3" placeholder="Any special requests, dietary requirements, or preferences?"></textarea>
+                                    <small class="form-text text-muted">Please let us know about any special needs or preferences.</small>
+                                </div>
+
+                                <!-- Arrival Information -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Arrival Information</h6>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="phone" class="form-label">Phone *</label>
-                                        <input type="tel" class="form-control" id="phone" required>
-                                    </div>
-                                    <div class="col-12 mb-3">
-                                        <label for="specialRequests" class="form-label">Special Requests</label>
-                                        <textarea class="form-control" id="specialRequests" rows="3" placeholder="Any special requests or preferences?"></textarea>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="arrivalTime" class="form-label">Expected Arrival Time</label>
+                                                <select class="form-select" id="arrivalTime">
+                                                    <option value="">Select arrival time</option>
+                                                    <option value="morning">Morning (6:00 AM - 12:00 PM)</option>
+                                                    <option value="afternoon">Afternoon (12:00 PM - 6:00 PM)</option>
+                                                    <option value="evening">Evening (6:00 PM - 10:00 PM)</option>
+                                                    <option value="late">Late (After 10:00 PM)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="transportation" class="form-label">Transportation</label>
+                                                <select class="form-select" id="transportation">
+                                                    <option value="">Select transportation</option>
+                                                    <option value="car">Private Car</option>
+                                                    <option value="taxi">Taxi</option>
+                                                    <option value="bus">Bus</option>
+                                                    <option value="plane">Airplane</option>
+                                                    <option value="other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </form>
@@ -160,14 +277,15 @@
                         <h5 class="mb-0">Booking Summary</h5>
                     </div>
                     <div class="card-body">
-                        <div id="bookingSummary">
-                            <div class="text-center py-4">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
+                            <div id="bookingSummary">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-3 text-muted">Calculating total...</p>
+                                    <small class="text-muted">Select a room type to see pricing</small>
                                 </div>
-                                <p class="mt-3 text-muted">Calculating total...</p>
                             </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -237,6 +355,84 @@
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Enhanced form styling */
+    .additional-guest {
+        border-left: 4px solid var(--primary-color);
+        transition: all 0.3s ease;
+    }
+    
+    .additional-guest .card-header {
+        background-color: rgba(6, 4, 62, 0.1) !important;
+        border-bottom: 1px solid rgba(6, 4, 62, 0.2);
+    }
+    
+    .form-control.is-valid {
+        border-color: #28a745;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.94-.94 1.86 1.86L7.7 5.73l.94.94L4.1 10.3z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 1.4 1.4m0-1.4-1.4 1.4'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .alert-info {
+        border-left: 4px solid var(--secondary-color);
+        background-color: rgba(5, 238, 255, 0.1);
+    }
+    
+    .card-header.bg-primary {
+        background-color: var(--primary-color) !important;
+    }
+    
+    .remove-guest {
+        transition: all 0.2s ease;
+    }
+    
+    .remove-guest:hover {
+        transform: scale(1.1);
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    .btn-outline-primary {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(6, 4, 62, 0.25);
+    }
+    
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(6, 4, 62, 0.25);
+    }
+    
+    @media (max-width: 768px) {
+        .additional-guest .card-body .row .col-md-6 {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -246,54 +442,323 @@ document.addEventListener('DOMContentLoaded', function() {
     const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
     document.getElementById('nights').textContent = nights + ' ' + (nights === 1 ? 'night' : 'nights');
     
-    // Load room types
-    loadRoomTypes();
+        // Initialize based on whether room type is pre-selected
+        {% if room_type %}
+        // Room type is pre-selected from search
+        updateBookingSummary({
+            base_price: {{ room_type.base_price }},
+            name: '{{ room_type.name }}'
+        });
+        {% else %}
+        // Load room types dynamically
+        loadRoomTypes();
+        {% endif %}
+
+        // Load user profile if logged in
+        loadUserProfile();
+
+        // Preload some data to make the page feel faster
+        preloadBookingData();
     
-    // Load user profile if logged in
-    loadUserProfile();
+    // Initialize enhanced form validation and guest management
+    initializeBookingForm();
     
-    // Enable/disable confirm button based on form completion
-    const confirmBtn = document.getElementById('confirmBooking');
-    const termsCheckbox = document.getElementById('termsAccepted');
-    
-    function checkFormCompletion() {
-        const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'cardNumber', 'expiryDate', 'cvv', 'cardName'];
-        const allFilled = requiredFields.every(field => document.getElementById(field).value.trim() !== '');
-        const termsAccepted = termsCheckbox.checked;
-        const roomSelected = document.querySelector('input[name="roomType"]:checked');
-        
-        confirmBtn.disabled = !(allFilled && termsAccepted && roomSelected);
-    }
-    
-    // Add event listeners
-    document.querySelectorAll('#bookingForm input, #bookingForm textarea').forEach(input => {
-        input.addEventListener('input', checkFormCompletion);
-    });
-    termsCheckbox.addEventListener('change', checkFormCompletion);
-    
-    // Confirm booking
-    confirmBtn.addEventListener('click', function() {
-        if (!confirmBtn.disabled) {
-            processBooking();
+    function initializeBookingForm() {
+        const confirmBtn = document.getElementById('confirmBooking');
+        const termsCheckbox = document.getElementById('termsAccepted');
+        const addGuestBtn = document.getElementById('addGuestBtn');
+        const guestsCount = {{ guests }};
+
+        // Show additional guests section if more than 1 guest
+        if (guestsCount > 1) {
+            document.getElementById('additionalGuestsSection').style.display = 'block';
+            // Add guest forms for the additional guests
+            for (let i = 1; i < guestsCount; i++) {
+                addAdditionalGuest(i);
+            }
         }
-    });
+
+        // Add event listener for adding guests
+        if (addGuestBtn) {
+            addGuestBtn.addEventListener('click', function() {
+                const currentGuests = document.querySelectorAll('.additional-guest').length;
+                addAdditionalGuest(currentGuests + 1);
+            });
+        }
+
+        function checkFormCompletion() {
+            const requiredFields = ['firstName', 'lastName', 'email', 'phone'];
+            const allFilled = requiredFields.every(field => {
+                const element = document.getElementById(field);
+                return element && element.value.trim() !== '';
+            });
+            const termsAccepted = termsCheckbox.checked;
+            const roomSelected = document.querySelector('input[name="roomType"]:checked') || document.getElementById('selectedRoomTypeId');
+            
+            confirmBtn.disabled = !(allFilled && termsAccepted && roomSelected);
+        }
+
+        // Add event listeners for form validation
+        const formElements = document.querySelectorAll('#bookingForm input, #bookingForm textarea, #bookingForm select');
+        formElements.forEach(input => {
+            input.addEventListener('input', checkFormCompletion);
+            input.addEventListener('change', checkFormCompletion);
+        });
+        termsCheckbox.addEventListener('change', checkFormCompletion);
+
+        // Handle confirm booking button click
+        confirmBtn.addEventListener('click', function() {
+            if (!confirmBtn.disabled) {
+                if (validateForm()) {
+                    processBooking();
+                }
+            }
+        });
+
+        // Initialize form completion check
+        checkFormCompletion();
+    }
+
+    function addAdditionalGuest(guestNumber) {
+        const container = document.getElementById('additionalGuests');
+        const guestDiv = document.createElement('div');
+        guestDiv.className = 'additional-guest card mb-3';
+        guestDiv.innerHTML = `
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Guest ${guestNumber}</h6>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-guest">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">First Name *</label>
+                        <input type="text" class="form-control guest-first-name" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Last Name *</label>
+                        <input type="text" class="form-control guest-last-name" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control guest-email">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-control guest-phone">
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(guestDiv);
+
+        // Add event listener for remove button
+        guestDiv.querySelector('.remove-guest').addEventListener('click', function() {
+            guestDiv.remove();
+        });
+
+        // Add event listeners for validation
+        const inputs = guestDiv.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                const confirmBtn = document.getElementById('confirmBooking');
+                const termsCheckbox = document.getElementById('termsAccepted');
+                const roomSelected = document.querySelector('input[name="roomType"]:checked') || document.getElementById('selectedRoomTypeId');
+                const primaryGuestValid = validatePrimaryGuest();
+                
+                confirmBtn.disabled = !(primaryGuestValid && termsCheckbox.checked && roomSelected);
+            });
+        });
+    }
+
+    function validatePrimaryGuest() {
+        const requiredFields = ['firstName', 'lastName', 'email', 'phone'];
+        return requiredFields.every(fieldId => {
+            const field = document.getElementById(fieldId);
+            return field && field.value.trim() !== '';
+        });
+    }
+
+    function validateForm() {
+        let isValid = true;
+        const requiredFields = ['firstName', 'lastName', 'email', 'phone'];
+        
+        // Clear previous validation states
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.classList.remove('is-invalid', 'is-valid');
+            }
+        });
+
+        // Validate primary guest
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.add('is-valid');
+                }
+            }
+        });
+
+        // Validate email format
+        const emailField = document.getElementById('email');
+        if (emailField) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailField.value && !emailRegex.test(emailField.value)) {
+                emailField.classList.add('is-invalid');
+                isValid = false;
+            }
+        }
+
+        // Validate additional guests
+        const additionalGuests = document.querySelectorAll('.additional-guest');
+        additionalGuests.forEach((guestDiv, index) => {
+            const firstName = guestDiv.querySelector('.guest-first-name');
+            const lastName = guestDiv.querySelector('.guest-last-name');
+            
+            if (firstName && lastName) {
+                if (!firstName.value.trim() || !lastName.value.trim()) {
+                    firstName.classList.add('is-invalid');
+                    lastName.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    firstName.classList.add('is-valid');
+                    lastName.classList.add('is-valid');
+                }
+            }
+        });
+
+        return isValid;
+    }
 });
 
 function loadRoomTypes() {
-    fetch(`/api/hotels/{{ hotel.id }}/availability?check_in={{ check_in }}&check_out={{ check_out }}&guests={{ guests }}`)
-        .then(response => response.json())
+    const startTime = Date.now();
+    
+    // Set a timeout to show a message if loading takes too long
+    const timeoutId = setTimeout(() => {
+        document.getElementById('roomTypes').innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Loading is taking longer than usual...</p>
+                <small class="text-muted">Please wait a moment more or try refreshing the page</small>
+            </div>
+        `;
+    }, 5000); // Show message after 5 seconds
+    
+    const controller = new AbortController();
+    const timeoutAbort = setTimeout(() => controller.abort(), 15000); // Abort after 15 seconds
+    
+    fetch(`/api/hotels/{{ hotel.id }}/availability?check_in={{ check_in }}&check_out={{ check_out }}&guests={{ guests }}`, {
+        signal: controller.signal
+    })
+        .then(response => {
+            clearTimeout(timeoutId);
+            clearTimeout(timeoutAbort);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            const loadTime = Date.now() - startTime;
+            console.log(`Room types loaded in ${loadTime}ms`);
+            
             if (data.availability && data.availability.length > 0) {
                 displayRoomTypes(data.availability);
                 updateBookingSummary(data.availability[0]); // Default to first room type
             } else {
-                document.getElementById('roomTypes').innerHTML = '<div class="alert alert-warning">No rooms available for the selected dates.</div>';
+                document.getElementById('roomTypes').innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        No rooms available for the selected dates. Please try different dates or check other hotels.
+                    </div>
+                `;
             }
         })
         .catch(error => {
+            clearTimeout(timeoutId);
+            clearTimeout(timeoutAbort);
+            
             console.error('Error loading room types:', error);
-            document.getElementById('roomTypes').innerHTML = '<div class="alert alert-danger">Error loading room types. Please try again.</div>';
+            const loadTime = Date.now() - startTime;
+            console.log(`Failed after ${loadTime}ms`);
+            
+            let errorMessage = 'Error loading room types.';
+            if (error.name === 'AbortError') {
+                errorMessage = 'Request timed out. The server is taking too long to respond.';
+            }
+            
+            document.getElementById('roomTypes').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>${errorMessage}</strong><br>
+                    <small>Please check your connection and try again. If the problem persists, contact support.</small>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-danger" onclick="loadRoomTypes()">
+                            <i class="fas fa-redo me-1"></i>Retry
+                        </button>
+                    </div>
+                </div>
+            `;
         });
+}
+
+function preloadBookingData() {
+    // Preload hotel images and other static data
+    const hotelImages = [
+        {% if hotel.images %}
+            {% for image in hotel.images[:3] %}
+                "{{ image }}",
+            {% endfor %}
+        {% endif %}
+    ];
+    
+    // Preload images
+    hotelImages.forEach(imageUrl => {
+        const img = new Image();
+        img.src = imageUrl;
+    });
+    
+    // Preload payment form validation
+    const cardNumber = document.getElementById('cardNumber');
+    if (cardNumber) {
+        cardNumber.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+            let matches = value.match(/\d{4,16}/g);
+            let match = matches && matches[0] || '';
+            let parts = [];
+            for (let i = 0, len = match.length; i < len; i += 4) {
+                parts.push(match.substring(i, i + 4));
+            }
+            if (parts.length) {
+                e.target.value = parts.join(' ');
+            } else {
+                e.target.value = value;
+            }
+        });
+    }
+    
+    // Preload expiry date formatting
+    const expiryDate = document.getElementById('expiryDate');
+    if (expiryDate) {
+        expiryDate.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value;
+        });
+    }
 }
 
 function displayRoomTypes(roomTypes) {
@@ -382,64 +847,141 @@ function loadUserProfile() {
 }
 
 function processBooking() {
-    const selectedRoomType = document.querySelector('input[name="roomType"]:checked');
-    if (!selectedRoomType) {
+    // Get selected room type ID
+    const selectedRoomTypeId = document.getElementById('selectedRoomTypeId')?.value || 
+                               document.querySelector('input[name="roomType"]:checked')?.value;
+    
+    if (!selectedRoomTypeId) {
         alert('Please select a room type');
         return;
     }
     
+    // Prepare primary guest data
+    const primaryGuest = {
+        first_name: document.getElementById('firstName').value,
+        last_name: document.getElementById('lastName').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        adults: 1, // Primary guest counts as 1 adult
+        children: 0,
+        date_of_birth: document.getElementById('dateOfBirth').value || '1990-01-01',
+        nationality: document.getElementById('nationality').value || 'Namibian'
+    };
+
+    // Prepare additional guests data
+    const additionalGuests = [];
+    const additionalGuestDivs = document.querySelectorAll('.additional-guest');
+    
+    additionalGuestDivs.forEach((guestDiv, index) => {
+        const firstName = guestDiv.querySelector('.guest-first-name').value;
+        const lastName = guestDiv.querySelector('.guest-last-name').value;
+        const email = guestDiv.querySelector('.guest-email').value;
+        const phone = guestDiv.querySelector('.guest-phone').value;
+        
+        if (firstName && lastName) {
+            additionalGuests.push({
+                first_name: firstName,
+                last_name: lastName,
+                email: email || '',
+                phone: phone || '',
+                adults: 1,
+                children: 0,
+                date_of_birth: '1990-01-01', // Default for additional guests
+                nationality: 'Namibian' // Default for additional guests
+            });
+        }
+    });
+
+    // Combine all guests
+    const guests = [primaryGuest, ...additionalGuests];
+    
+    // Calculate total adults and children
+    const totalAdults = guests.reduce((sum, guest) => sum + (guest.adults || 1), 0);
+    const totalChildren = guests.reduce((sum, guest) => sum + (guest.children || 0), 0);
+    
+    // Prepare special requests with additional information
+    let specialRequests = document.getElementById('specialRequests').value || '';
+    const arrivalTime = document.getElementById('arrivalTime').value;
+    const transportation = document.getElementById('transportation').value;
+    
+    if (arrivalTime) {
+        specialRequests += (specialRequests ? '\n' : '') + `Expected arrival: ${arrivalTime}`;
+    }
+    if (transportation) {
+        specialRequests += (specialRequests ? '\n' : '') + `Transportation: ${transportation}`;
+    }
+    
     const bookingData = {
         hotel_id: {{ hotel.id }},
-        room_type_id: selectedRoomType.value,
+        room_type_id: parseInt(selectedRoomTypeId),
         check_in_date: '{{ check_in }}',
         check_out_date: '{{ check_out }}',
-        adults: {{ guests }},
-        children: 0,
-        guest_info: {
-            first_name: document.getElementById('firstName').value,
-            last_name: document.getElementById('lastName').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            special_requests: document.getElementById('specialRequests').value
-        },
-        payment_info: {
-            card_number: document.getElementById('cardNumber').value,
-            expiry_date: document.getElementById('expiryDate').value,
-            cvv: document.getElementById('cvv').value,
-            card_name: document.getElementById('cardName').value
-        }
+        guests: guests,
+        special_requests: specialRequests,
+        guest_notes: `Total guests: ${totalAdults + totalChildren} (${totalAdults} adults, ${totalChildren} children)`
     };
     
     // Show loading state
     const confirmBtn = document.getElementById('confirmBooking');
     const originalText = confirmBtn.innerHTML;
-    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Booking...';
     confirmBtn.disabled = true;
+    
+    // Get auth token
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        alert('Please login to make a booking');
+        confirmBtn.innerHTML = originalText;
+        confirmBtn.disabled = false;
+        return;
+    }
     
     fetch('/api/bookings', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify(bookingData)
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            // Redirect to booking confirmation page
-            window.location.href = `/bookings/${data.booking_id}`;
+        if (data.booking) {
+            // Show success message and redirect
+            showSuccessMessage('Booking created successfully! Redirecting to your bookings...');
+            setTimeout(() => {
+                window.location.href = '/my-bookings';
+            }, 2000);
         } else {
-            alert('Booking failed: ' + (data.error || 'Unknown error'));
-            confirmBtn.innerHTML = originalText;
-            confirmBtn.disabled = false;
+            throw new Error(data.error || 'Booking failed');
         }
     })
     .catch(error => {
         console.error('Booking error:', error);
-        alert('Booking failed. Please try again.');
+        showErrorMessage('Booking failed: ' + (error.message || 'Please try again'));
         confirmBtn.innerHTML = originalText;
         confirmBtn.disabled = false;
     });
+}
+
+function showSuccessMessage(message) {
+    const alertHtml = `
+        <div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;" role="alert">
+            <i class="fas fa-check-circle me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+}
+
+function showErrorMessage(message) {
+    const alertHtml = `
+        <div class="alert alert-danger alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
 }
 </script>
 {% endblock %}

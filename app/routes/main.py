@@ -43,7 +43,7 @@ def search_hotels():
 
 @main_bp.route('/hotels')
 def hotels():
-    """List all hotels"""
+    """List all hotels with pagination"""
     try:
         page = request.args.get('page', 1, type=int)
         per_page = 12
@@ -54,7 +54,7 @@ def hotels():
         min_price = request.args.get('min_price', type=float)
         max_price = request.args.get('max_price', type=float)
         
-        # Build query
+        # Build query - simple query without eager loading
         query = Hotel.query.filter_by(is_active=True)
         
         if city:
@@ -71,14 +71,28 @@ def hotels():
             if max_price:
                 query = query.filter(RoomType.base_price <= max_price)
         
-        hotels = query.paginate(
+        # Get pagination object
+        hotels_pagination = query.paginate(
             page=page, per_page=per_page, error_out=False
         )
         
-        return render_template('hotels.html', hotels=hotels)
+        # Get unique cities for filter dropdown
+        cities = db.session.query(Hotel.city).filter_by(is_active=True).distinct().all()
+        cities = [city[0] for city in cities if city[0]]
+        
+        current_app.logger.info(f"Hotels page: {len(hotels_pagination.items)} hotels found")
+        current_app.logger.info(f"Cities: {cities}")
+        current_app.logger.info(f"Hotels items: {[h.name for h in hotels_pagination.items]}")
+        
+        return render_template('hotels.html', 
+                             hotels_pagination=hotels_pagination,
+                             hotels=hotels_pagination.items,
+                             cities=cities)
     except Exception as e:
         current_app.logger.error(f"Error loading hotels: {str(e)}")
-        return render_template('hotels.html', hotels=None)
+        import traceback
+        current_app.logger.error(traceback.format_exc())
+        return render_template('hotels.html', hotels=None, hotels_pagination=None, cities=[])
 
 @main_bp.route('/hotel/<int:hotel_id>')
 def hotel_detail(hotel_id):
@@ -201,7 +215,7 @@ def api_search():
 
 @main_bp.route('/api/hotels/<int:hotel_id>/availability')
 def api_hotel_availability(hotel_id):
-    """Get room availability for a specific hotel"""
+    """Get room availability for a specific hotel - optimized version with caching"""
     try:
         hotel = Hotel.query.get_or_404(hotel_id)
         
@@ -215,37 +229,58 @@ def api_hotel_availability(hotel_id):
         check_in_date = datetime.strptime(check_in, '%Y-%m-%d').date()
         check_out_date = datetime.strptime(check_out, '%Y-%m-%d').date()
         
-        # Get room types with availability
-        room_types = RoomType.query.filter_by(hotel_id=hotel_id, is_active=True).all()
-        availability = []
+        # Create cache key
+        cache_key = f"availability_{hotel_id}_{check_in}_{check_out}_{guests}"
         
-        for room_type in room_types:
-            if room_type.max_occupancy < guests:
-                continue
-                
-            # Count available rooms
-            available_rooms = db.session.query(Room)\
-                .outerjoin(Booking, and_(
-                    Booking.room_id == Room.id,
-                    or_(
-                        and_(Booking.check_in_date <= check_in_date, Booking.check_out_date > check_in_date),
-                        and_(Booking.check_in_date < check_out_date, Booking.check_out_date >= check_out_date),
-                        and_(Booking.check_in_date >= check_in_date, Booking.check_out_date <= check_out_date)
-                    ),
-                    Booking.status.in_(['confirmed', 'checked_in'])
-                ))\
-                .filter(
-                    Room.room_type_id == room_type.id,
-                    Room.is_active == True,
-                    Booking.id.is_(None)
-                ).count()
-            
+        # Try to get from cache first
+        cached_result = current_app.cache.get(cache_key)
+        if cached_result:
+            current_app.logger.info(f"Returning cached availability for hotel {hotel_id}")
+            return jsonify(cached_result)
+        
+        # Optimized query: Get room types with availability in a single query
+        availability_query = db.session.query(
+            RoomType,
+            func.count(Room.id).label('total_rooms'),
+            func.count(
+                db.case(
+                    (and_(
+                        Room.is_active == True,
+                        ~db.session.query(Booking.id).filter(
+                            Booking.room_id == Room.id,
+                            Booking.status.in_(['confirmed', 'checked_in']),
+                            or_(
+                                and_(Booking.check_in_date <= check_in_date, Booking.check_out_date > check_in_date),
+                                and_(Booking.check_in_date < check_out_date, Booking.check_out_date >= check_out_date),
+                                and_(Booking.check_in_date >= check_in_date, Booking.check_out_date <= check_out_date)
+                            )
+                        ).exists()
+                    ), Room.id)
+                )
+            ).label('available_rooms')
+        )\
+        .join(Room, Room.room_type_id == RoomType.id)\
+        .filter(
+            RoomType.hotel_id == hotel_id,
+            RoomType.is_active == True,
+            RoomType.max_occupancy >= guests
+        )\
+        .group_by(RoomType.id)\
+        .having(func.count(Room.id) > 0)\
+        .order_by(RoomType.base_price)
+        
+        results = availability_query.all()
+        
+        availability = []
+        for room_type, total_rooms, available_rooms in results:
             if available_rooms > 0:
                 room_type_dict = room_type.to_dict()
                 room_type_dict['available_rooms'] = available_rooms
+                room_type_dict['total_rooms'] = total_rooms
                 availability.append(room_type_dict)
         
-        return jsonify({
+        # Prepare response data
+        response_data = {
             'hotel': hotel.to_dict(),
             'availability': availability,
             'search_params': {
@@ -253,7 +288,13 @@ def api_hotel_availability(hotel_id):
                 'check_out': check_out_date.isoformat(),
                 'guests': guests
             }
-        })
+        }
+        
+        # Cache the result for 2 minutes
+        current_app.cache.set(cache_key, response_data, timeout=120)
+        current_app.logger.info(f"Cached availability for hotel {hotel_id}")
+        
+        return jsonify(response_data)
         
     except ValueError:
         return jsonify({'error': 'Invalid date format'}), 400

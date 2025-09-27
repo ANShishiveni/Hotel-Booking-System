@@ -264,6 +264,8 @@ function displaySearchResults(results) {
     let html = '<div class="row">';
     
     results.forEach(hotel => {
+        const urlParams = new URLSearchParams(window.location.search);
+        
         html += `
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card hotel-card">
@@ -278,19 +280,42 @@ function displaySearchResults(results) {
                             <i class="fas fa-map-marker-alt me-1"></i>${hotel.city}, ${hotel.country}
                         </p>
                         <p class="card-text">${hotel.description.substring(0, 100)}${hotel.description.length > 100 ? '...' : ''}</p>
+                        
+                        <!-- Available Room Types -->
+                        ${hotel.available_room_types && hotel.available_room_types.length > 0 ? `
+                        <div class="mb-3">
+                            <h6 class="text-primary">Available Room Types:</h6>
+                            ${hotel.available_room_types.map(roomType => `
+                                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                                    <div>
+                                        <strong>${roomType.name}</strong>
+                                        <small class="d-block text-muted">${roomType.available_rooms} rooms available</small>
+                                        <small class="d-block text-muted">Max ${roomType.max_occupancy} guests</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="h6 text-primary mb-1">N$${roomType.base_price}/night</div>
+                                        <button class="btn btn-success btn-sm" onclick="bookNow(${hotel.id}, ${roomType.id}, '${urlParams.get('check_in')}', '${urlParams.get('check_out')}', ${urlParams.get('guests')})">
+                                            <i class="fas fa-calendar-plus me-1"></i>Book Now
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ` : ''}
+                        
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="rating-stars">
                                 ${generateStars(hotel.average_rating || 0)}
                                 <span class="ms-1 text-muted">(${hotel.reviews_count || 0} reviews)</span>
                             </div>
                             <div class="text-end">
-                                <div class="price-tag">From $${hotel.min_price || 0}</div>
+                                <div class="price-tag">From N$${hotel.min_price || 0}</div>
                             </div>
                         </div>
-                        <div class="mt-3">
+                        <div class="mt-3 d-grid gap-2">
                             <a href="/hotel/${hotel.id}?${new URLSearchParams(window.location.search).toString()}" 
-                               class="btn btn-primary w-100">
-                                View Details
+                               class="btn btn-outline-primary">
+                                <i class="fas fa-info-circle me-2"></i>View Details
                             </a>
                         </div>
                     </div>
@@ -327,6 +352,28 @@ function generateStars(rating) {
         }
     }
     return stars;
+}
+
+function bookNow(hotelId, roomTypeId, checkIn, checkOut, guests) {
+    // Check if user is logged in
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        showAlert('warning', 'Please login to make a booking');
+        // Trigger login modal
+        $('#loginModal').modal('show');
+        return;
+    }
+    
+    // Redirect to booking page with parameters
+    const params = new URLSearchParams({
+        hotel_id: hotelId,
+        room_type_id: roomTypeId,
+        check_in: checkIn,
+        check_out: checkOut,
+        guests: guests
+    });
+    
+    window.location.href = `/booking?${params.toString()}`;
 }
 
 function showAlert(type, message) {
