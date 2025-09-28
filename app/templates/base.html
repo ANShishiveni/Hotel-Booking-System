@@ -218,7 +218,71 @@
         }
     </style>
     
-    {% block extra_css %}{% endblock %}
+    {% block extra_css %}
+    <style>
+    /* Global pagination styling to match website colors */
+    .pagination .page-link {
+        color: var(--primary-color);
+        border-color: #dee2e6;
+        background-color: white;
+        transition: all 0.3s ease;
+    }
+
+    .pagination .page-link:hover {
+        color: white;
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+        background-color: white;
+        border-color: #dee2e6;
+    }
+
+    /* Enhanced pagination styling */
+    .pagination .page-link {
+        padding: 0.5rem 0.75rem;
+        margin: 0 2px;
+        border-radius: 8px;
+        font-weight: 500;
+        border: 2px solid transparent;
+    }
+
+    .pagination .page-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(6, 4, 62, 0.2);
+    }
+
+    .pagination .page-item.active .page-link {
+        box-shadow: 0 4px 12px rgba(6, 4, 62, 0.3);
+        transform: translateY(-1px);
+    }
+
+    /* Navigation buttons styling */
+    .pagination .page-link i {
+        font-size: 0.875rem;
+    }
+
+    /* Responsive pagination */
+    @media (max-width: 576px) {
+        .pagination .page-link {
+            padding: 0.375rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .pagination .page-link i {
+            font-size: 0.75rem;
+        }
+    }
+    </style>
+    {% endblock %}
 </head>
 <body>
     <!-- Navigation -->
