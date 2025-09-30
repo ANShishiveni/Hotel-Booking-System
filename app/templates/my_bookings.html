@@ -180,6 +180,19 @@ function loadBookings() {
     })
         .then(response => {
             console.log('Auth test response status:', response.status);
+            if (response.status === 422) {
+                // JWT signature verification failed - token is invalid
+                console.error('JWT token is invalid - signature verification failed');
+                showError('Your session has expired. Please login again.', 'warning');
+                // Clear invalid token
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('refreshToken');
+                // Redirect to login after a short delay
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+                return Promise.reject('Invalid JWT token');
+            }
             return response.json();
         })
         .then(authData => {
@@ -195,7 +208,9 @@ function loadBookings() {
         })
         .catch(error => {
             console.error('Auth test error:', error);
-            showError('Authentication test failed. Please login again.');
+            if (error !== 'Invalid JWT token') {
+                showError('Authentication test failed. Please login again.');
+            }
         });
 }
 
@@ -207,6 +222,17 @@ function loadBookingsData(authToken) {
     })
         .then(response => {
             console.log('Bookings response status:', response.status);
+            if (response.status === 422) {
+                // JWT signature verification failed - token is invalid
+                console.error('JWT token is invalid for bookings API');
+                showError('Your session has expired. Please login again.', 'warning');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('refreshToken');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+                return Promise.reject('Invalid JWT token');
+            }
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -231,7 +257,9 @@ function loadBookingsData(authToken) {
         })
         .catch(error => {
             console.error('Error loading bookings:', error);
-            showError('Unable to load bookings. Please try again later.');
+            if (error !== 'Invalid JWT token') {
+                showError('Unable to load bookings. Please try again later.');
+            }
         });
 }
 

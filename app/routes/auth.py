@@ -85,28 +85,21 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        # Create audit log
-        audit_log = AuditLog(
-            table_name='users',
-            record_id=user.id,
-            action='CREATE',
-            new_values=user.to_dict(),
-            user_id=user.id,
-            ip_address=request.remote_addr,
-            user_agent=request.headers.get('User-Agent')
-        )
-        db.session.add(audit_log)
-        db.session.commit()
-        
-        # Generate tokens
-        access_token = create_access_token(identity=user.id)
-        refresh_token = create_refresh_token(identity=user.id)
+        # Generate tokens (using user object instead of user.id)
+        access_token = create_access_token(identity=user)
+        refresh_token = create_refresh_token(identity=user)
         
         return jsonify({
             'message': 'User registered successfully',
             'access_token': access_token,
             'refresh_token': refresh_token,
-            'user': user.to_dict()
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name
+            }
         }), 201
         
     except Exception as e:
