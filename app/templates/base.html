@@ -282,6 +282,19 @@
         }
     }
     </style>
+    
+    <!-- Fix Bootstrap CSS compatibility issues -->
+    <style>
+    body {
+        text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
+    }
+    
+    th {
+        text-align: match-parent;
+        -webkit-text-align: match-parent;
+    }
+    </style>
     {% endblock %}
 </head>
 <body>
@@ -289,10 +302,10 @@
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <i class="fas fa-hotel me-2"></i>Namibia Hotels
+                Namibia Hotels
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
@@ -316,35 +329,31 @@
                 </ul>
                 
                 <ul class="navbar-nav">
-                    {% if current_user %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user me-1"></i>{{ current_user.first_name }}
+                    <!-- User Menu (shown when logged in) -->
+                    <li class="nav-item dropdown" id="userMenu" style="display: none;">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" id="userDropdown">
+                            <i class="fas fa-user me-1"></i><span id="userNameNav">User</span>
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="/bookings"><i class="fas fa-calendar me-2"></i>My Bookings</a></li>
+                            <li><a class="dropdown-item" href="/my-bookings"><i class="fas fa-calendar me-2"></i>My Bookings</a></li>
                             <li><a class="dropdown-item" href="/reviews"><i class="fas fa-star me-2"></i>My Reviews</a></li>
-                            {% if current_user.has_role('admin') %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/admin"><i class="fas fa-cog me-2"></i>Admin Panel</a></li>
-                            {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                         </ul>
                     </li>
-                    {% else %}
-                    <li class="nav-item">
+                    
+                    <!-- Login/Register Menu (shown when not logged in) -->
+                    <li class="nav-item" id="loginMenu">
                         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
                             <i class="fas fa-sign-in-alt me-1"></i>Login
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" id="registerMenu">
                         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#registerModal">
                             <i class="fas fa-user-plus me-1"></i>Register
                         </a>
                     </li>
-                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -359,7 +368,7 @@
                     {% for category, message in messages %}
                         <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
                             {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close alert"></button>
                         </div>
                     {% endfor %}
                 </div>
@@ -374,7 +383,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-4">
-                    <h5><i class="fas fa-hotel me-2"></i>Namibia Hotels</h5>
+                    <h5>Namibia Hotels</h5>
                     <p>Your premier destination for luxury accommodations across Namibia. Experience the beauty of our country with comfort and style.</p>
                 </div>
                 <div class="col-md-2">
@@ -405,7 +414,7 @@
             <hr class="my-4">
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <p class="mb-0">&copy; 2024 Namibia Hotels. All rights reserved.</p>
+                    <p class="mb-0">&copy; 2025 Namibia Hotels. All rights reserved.</p>
                 </div>
                 <div class="col-md-6 text-end">
                     <a href="#" class="me-3"><i class="fab fa-facebook"></i></a>
@@ -423,7 +432,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Login</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="loginForm">
@@ -453,7 +462,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Register</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="registerForm">
@@ -509,6 +518,9 @@
         
         // Initialize page
         $(document).ready(function() {
+            // Initialize navigation state
+            initializeNavigation();
+            
             if (authToken) {
                 loadUserProfile();
             }
@@ -516,6 +528,23 @@
             // Setup form handlers
             setupAuthHandlers();
         });
+        
+        // Initialize navigation state
+        function initializeNavigation() {
+            const authToken = localStorage.getItem('authToken');
+            
+            if (authToken) {
+                // Show user menu, hide login/register
+                document.getElementById('userMenu').style.display = 'block';
+                document.getElementById('loginMenu').style.display = 'none';
+                document.getElementById('registerMenu').style.display = 'none';
+            } else {
+                // Show login/register, hide user menu
+                document.getElementById('userMenu').style.display = 'none';
+                document.getElementById('loginMenu').style.display = 'block';
+                document.getElementById('registerMenu').style.display = 'block';
+            }
+        }
         
         // Setup authentication handlers
         function setupAuthHandlers() {
@@ -602,7 +631,13 @@
         
         // Load user profile
         async function loadUserProfile() {
-            if (!authToken) return;
+            if (!authToken) {
+                // No auth token - show login/register, hide user menu
+                document.getElementById('userMenu').style.display = 'none';
+                document.getElementById('loginMenu').style.display = 'block';
+                document.getElementById('registerMenu').style.display = 'block';
+                return;
+            }
             
             try {
                 const response = await fetch('/api/auth/profile', {
@@ -614,12 +649,25 @@
                 if (response.ok) {
                     const data = await response.json();
                     currentUser = data.user;
+                    
+                    // Update navigation with user info
+                    document.getElementById('userNameNav').textContent = currentUser.first_name || 'User';
+                    
+                    // Show user menu, hide login/register
+                    document.getElementById('userMenu').style.display = 'block';
+                    document.getElementById('loginMenu').style.display = 'none';
+                    document.getElementById('registerMenu').style.display = 'none';
+                    
                 } else if (response.status === 401) {
                     // Token expired, try to refresh
                     await refreshToken();
                 }
             } catch (error) {
                 console.error('Error loading user profile:', error);
+                // On error, show login/register
+                document.getElementById('userMenu').style.display = 'none';
+                document.getElementById('loginMenu').style.display = 'block';
+                document.getElementById('registerMenu').style.display = 'block';
             }
         }
         
@@ -669,6 +717,12 @@
             localStorage.removeItem('authToken');
             localStorage.removeItem('refreshToken');
             currentUser = null;
+            
+            // Update navigation immediately
+            document.getElementById('userMenu').style.display = 'none';
+            document.getElementById('loginMenu').style.display = 'block';
+            document.getElementById('registerMenu').style.display = 'block';
+            
             location.reload();
         }
         
@@ -677,7 +731,7 @@
             const alertHtml = `
                 <div class="alert alert-${type} alert-dismissible fade show" role="alert">
                     ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close alert"></button>
                 </div>
             `;
             $('.container').first().prepend(alertHtml);

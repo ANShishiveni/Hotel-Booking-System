@@ -33,6 +33,11 @@ class Config:
     
     # Timezone
     TIMEZONE = os.environ.get('TIMEZONE') or 'Africa/Windhoek'
+    
+    # Stripe Configuration
+    STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY') or 'sk_test_demo_key_for_development'
+    STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY') or 'pk_test_demo_key_for_development'
+    STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET') or 'whsec_demo_webhook_secret'
 
 class DevelopmentConfig(Config):
     """Development configuration"""

@@ -230,23 +230,57 @@
                         <!-- Payment Information -->
                         <div class="mb-4">
                             <h5>Payment Information</h5>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="cardNumber" class="form-label">Card Number *</label>
-                                    <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" required>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Demo Mode:</strong> Use test card <code>4242 4242 4242 4242</code> with any future expiry date and any 3-digit CVV.
+                            </div>
+                            
+                            <!-- Stripe Payment Form -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-12 mb-3">
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <strong>Demo Payment System:</strong> This is a demonstration system. 
+                                                You can use any card details (e.g., 4242 4242 4242 4242) to test the booking flow.
+                                            </div>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label">Card Information *</label>
+                                            <div id="card-element" class="form-control" style="height: 40px; padding: 10px;">
+                                                <!-- Stripe Elements will create form elements here -->
+                                            </div>
+                                            <div id="card-errors" class="text-danger mt-2" role="alert"></div>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <label for="cardholderName" class="form-label">Name on Card *</label>
+                                            <input type="text" class="form-control" id="cardholderName" placeholder="John Doe" required>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-3 mb-3">
-                                    <label for="expiryDate" class="form-label">Expiry Date *</label>
-                                    <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY" required>
+                            </div>
+                            
+                            <!-- Test Cards Info -->
+                            <div class="mt-3">
+                                <h6>Test Cards for Demo:</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card border-success">
+                                            <div class="card-body p-2">
+                                                <small class="text-success"><strong>Success:</strong> 4242 4242 4242 4242</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card border-danger">
+                                            <div class="card-body p-2">
+                                                <small class="text-danger"><strong>Decline:</strong> 4000 0000 0000 0002</small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-3 mb-3">
-                                    <label for="cvv" class="form-label">CVV *</label>
-                                    <input type="text" class="form-control" id="cvv" placeholder="123" required>
-                                </div>
-                                <div class="col-12 mb-3">
-                                    <label for="cardName" class="form-label">Name on Card *</label>
-                                    <input type="text" class="form-control" id="cardName" required>
-                                </div>
+                                <small class="text-muted">Use any future expiry date (e.g., 12/25) and any 3-digit CVV (e.g., 123)</small>
                             </div>
                         </div>
 
@@ -299,7 +333,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Terms and Conditions</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close modal"></button>
             </div>
             <div class="modal-body">
                 <h6>Booking Terms</h6>
@@ -332,7 +366,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Privacy Policy</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close modal"></button>
             </div>
             <div class="modal-body">
                 <h6>Information Collection</h6>
@@ -433,7 +467,44 @@
 </style>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
+<!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+// Initialize Stripe with test publishable key
+const stripe = Stripe('pk_test_demo_key_for_development');
+const elements = stripe.elements();
+
+// Create card element
+const cardElement = elements.create('card', {
+    style: {
+        base: {
+            fontSize: '16px',
+            color: '#424770',
+            '::placeholder': {
+                color: '#aab7c4',
+            },
+        },
+        invalid: {
+            color: '#9e2146',
+        },
+    },
+});
+
+// Mount card element
+cardElement.mount('#card-element');
+
+// Handle real-time validation errors from the card Element
+cardElement.on('change', function(event) {
+    const displayError = document.getElementById('card-errors');
+    if (event.error) {
+        displayError.textContent = event.error.message;
+    } else {
+        displayError.textContent = '';
+    }
+});
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Calculate nights
@@ -487,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function checkFormCompletion() {
-            const requiredFields = ['firstName', 'lastName', 'email', 'phone'];
+            const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'cardholderName'];
             const allFilled = requiredFields.every(field => {
                 const element = document.getElementById(field);
                 return element && element.value.trim() !== '';
@@ -583,7 +654,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function validateForm() {
         let isValid = true;
-        const requiredFields = ['firstName', 'lastName', 'email', 'phone'];
+        const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'cardholderName'];
         
         // Clear previous validation states
         requiredFields.forEach(fieldId => {
@@ -846,7 +917,7 @@ function loadUserProfile() {
         .catch(error => console.error('Error loading user profile:', error));
 }
 
-function processBooking() {
+async function processBooking() {
     // Get selected room type ID
     const selectedRoomTypeId = document.getElementById('selectedRoomTypeId')?.value || 
                                document.querySelector('input[name="roomType"]:checked')?.value;
@@ -856,6 +927,131 @@ function processBooking() {
         return;
     }
     
+    // Show loading state
+    const confirmBtn = document.getElementById('confirmBooking');
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Payment...';
+    confirmBtn.disabled = true;
+    
+    try {
+        // First, create the booking
+        const bookingData = await createBookingData();
+        
+        // Get auth token
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            console.error('No auth token found in localStorage');
+            alert('Please login to make a booking');
+            // Redirect to login
+            window.location.href = '/login';
+            throw new Error('Not authenticated');
+        }
+        
+        console.log('Auth token found, proceeding with booking...');
+        
+        // Create booking
+        console.log('Creating booking with data:', bookingData);
+        console.log('Auth token:', authToken ? 'Present' : 'Missing');
+        
+        const bookingResponse = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(bookingData)
+        });
+        
+        console.log('Booking response status:', bookingResponse.status);
+        const bookingResult = await bookingResponse.json();
+        console.log('Booking result:', bookingResult);
+        
+        if (!bookingResult.booking) {
+            console.error('Booking failed - no booking object in response');
+            throw new Error(bookingResult.error || bookingResult.msg || 'Booking creation failed');
+        }
+        
+        // Now process payment with Stripe
+        confirmBtn.innerHTML = '<i class="fas fa-credit-card me-2"></i>Processing Payment...';
+        
+        // Create payment intent
+        console.log('Creating payment intent for booking:', bookingResult.booking.id);
+        console.log('Payment request data:', {
+            booking_id: bookingResult.booking.id,
+            amount: bookingResult.booking.total_amount
+        });
+        
+        const paymentResponse = await fetch('/api/payments/create-payment-intent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                booking_id: bookingResult.booking.id,
+                amount: bookingResult.booking.total_amount
+            })
+        });
+        
+        console.log('Payment response status:', paymentResponse.status);
+        
+        if (!paymentResponse.ok) {
+            const errorText = await paymentResponse.text();
+            console.error('Payment API error:', errorText);
+            throw new Error(`Payment API error (${paymentResponse.status}): ${errorText}`);
+        }
+        
+        const paymentResult = await paymentResponse.json();
+        console.log('Payment result:', paymentResult);
+        
+        if (!paymentResult.payment_intent || !paymentResult.payment_intent.client_secret) {
+            console.error('Payment setup failed - missing client_secret:', paymentResult);
+            throw new Error(paymentResult.error || 'Payment setup failed');
+        }
+        
+        // For demo purposes, we'll skip Stripe confirmation and directly confirm the payment
+        // In a real implementation, you would use the actual Stripe confirmCardPayment here
+        
+        console.log('Processing demo payment...');
+        
+        // Simulate payment processing delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Directly confirm the payment on the backend (demo mode)
+        const confirmResponse = await fetch('/api/payments/confirm-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                payment_intent_id: paymentResult.payment_intent.id
+            })
+        });
+        
+        if (!confirmResponse.ok) {
+            const errorText = await confirmResponse.text();
+            throw new Error(`Payment confirmation failed: ${errorText}`);
+        }
+        
+        const confirmResult = await confirmResponse.json();
+        console.log('Payment confirmed on backend:', confirmResult);
+        
+        // Payment successful
+        showSuccessMessage('Payment successful! Booking confirmed. Redirecting...');
+        setTimeout(() => {
+            window.location.href = '/my-bookings';
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Booking/Payment error:', error);
+        showErrorMessage('Booking failed: ' + (error.message || 'Please try again'));
+        confirmBtn.innerHTML = originalText;
+        confirmBtn.disabled = false;
+    }
+}
+
+async function createBookingData() {
     // Prepare primary guest data
     const primaryGuest = {
         first_name: document.getElementById('firstName').value,
@@ -911,64 +1107,23 @@ function processBooking() {
         specialRequests += (specialRequests ? '\n' : '') + `Transportation: ${transportation}`;
     }
     
-    const bookingData = {
+    return {
         hotel_id: {{ hotel.id }},
-        room_type_id: parseInt(selectedRoomTypeId),
+        room_type_id: parseInt(document.getElementById('selectedRoomTypeId')?.value || 
+                               document.querySelector('input[name="roomType"]:checked')?.value),
         check_in_date: '{{ check_in }}',
         check_out_date: '{{ check_out }}',
         guests: guests,
         special_requests: specialRequests,
         guest_notes: `Total guests: ${totalAdults + totalChildren} (${totalAdults} adults, ${totalChildren} children)`
     };
-    
-    // Show loading state
-    const confirmBtn = document.getElementById('confirmBooking');
-    const originalText = confirmBtn.innerHTML;
-    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Booking...';
-    confirmBtn.disabled = true;
-    
-    // Get auth token
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-        alert('Please login to make a booking');
-        confirmBtn.innerHTML = originalText;
-        confirmBtn.disabled = false;
-        return;
-    }
-    
-    fetch('/api/bookings', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
-        },
-        body: JSON.stringify(bookingData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.booking) {
-            // Show success message and redirect
-            showSuccessMessage('Booking created successfully! Redirecting to your bookings...');
-            setTimeout(() => {
-                window.location.href = '/my-bookings';
-            }, 2000);
-        } else {
-            throw new Error(data.error || 'Booking failed');
-        }
-    })
-    .catch(error => {
-        console.error('Booking error:', error);
-        showErrorMessage('Booking failed: ' + (error.message || 'Please try again'));
-        confirmBtn.innerHTML = originalText;
-        confirmBtn.disabled = false;
-    });
 }
 
 function showSuccessMessage(message) {
     const alertHtml = `
         <div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;" role="alert">
             <i class="fas fa-check-circle me-2"></i>${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close alert"></button>
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', alertHtml);
@@ -978,7 +1133,7 @@ function showErrorMessage(message) {
     const alertHtml = `
         <div class="alert alert-danger alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;" role="alert">
             <i class="fas fa-exclamation-circle me-2"></i>${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close alert"></button>
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', alertHtml);

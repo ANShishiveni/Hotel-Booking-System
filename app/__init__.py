@@ -7,6 +7,7 @@ from flask_cors import CORS
 from flask_caching import Cache
 from datetime import timedelta
 import os
+import stripe
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -34,9 +35,21 @@ def create_app(config_name=None):
     # Make cache available as app.cache
     app.cache = cache
     
+    # Initialize Stripe
+    stripe.api_key = app.config['STRIPE_SECRET_KEY']
+    
     # Configure JWT
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
     app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
+    
+    # Add security headers
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        return response
     
     # JWT callbacks
     @jwt.user_identity_loader

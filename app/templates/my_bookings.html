@@ -96,7 +96,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Booking Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close modal"></button>
             </div>
             <div class="modal-body" id="bookingModalBody">
                 <!-- Booking details will be loaded here -->
@@ -117,7 +117,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Cancel Booking</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close modal"></button>
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to cancel this booking?</p>
@@ -147,6 +147,7 @@ let allBookings = [];
 let currentBookingId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('My Bookings page loaded, starting loadBookings...');
     loadBookings();
     
     // Event listeners
@@ -158,14 +159,73 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadBookings() {
-    fetch('/api/auth/bookings')
-        .then(response => response.json())
-        .then(data => {
-            if (data.bookings) {
-                allBookings = data.bookings;
-                displayBookings(allBookings);
-                updateTotalBookings();
+    console.log('Loading bookings...');
+    
+    const authToken = localStorage.getItem('authToken');
+    console.log('Auth token found:', authToken ? 'Yes' : 'No');
+    console.log('Auth token value:', authToken ? authToken.substring(0, 20) + '...' : 'None');
+    
+    if (!authToken) {
+        console.error('No auth token found');
+        showError('Please login to view your bookings.');
+        return;
+    }
+    
+    // First test authentication
+    console.log('Testing authentication...');
+    fetch('/api/auth/test-auth', {
+        headers: {
+            'Authorization': `Bearer ${authToken}`
+        }
+    })
+        .then(response => {
+            console.log('Auth test response status:', response.status);
+            return response.json();
+        })
+        .then(authData => {
+            console.log('Auth test result:', authData);
+            if (authData.success) {
+                console.log(`Authentication successful! Logged in as User ID: ${authData.user_id}, Username: ${authData.username}, Email: ${authData.email}`);
+                console.log('Proceeding with bookings...');
+                loadBookingsData(authToken);
             } else {
+                console.error('Authentication failed:', authData);
+                showError('Authentication failed. Please login again.');
+            }
+        })
+        .catch(error => {
+            console.error('Auth test error:', error);
+            showError('Authentication test failed. Please login again.');
+        });
+}
+
+function loadBookingsData(authToken) {
+    fetch('/api/auth/bookings', {
+        headers: {
+            'Authorization': `Bearer ${authToken}`
+        }
+    })
+        .then(response => {
+            console.log('Bookings response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Bookings data received:', data);
+            if (data.bookings && Array.isArray(data.bookings)) {
+                allBookings = data.bookings;
+                console.log('Number of bookings:', allBookings.length);
+                if (allBookings.length > 0) {
+                    displayBookings(allBookings);
+                    updateTotalBookings();
+                } else {
+                    console.log('No bookings found - showing empty state');
+                    showNoBookings();
+                }
+            } else {
+                console.log('Invalid bookings data format:', data);
                 showNoBookings();
             }
         })
@@ -493,7 +553,7 @@ function showAlert(message, type) {
     alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
     alertDiv.innerHTML = `
         ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close alert"></button>
     `;
     
     document.body.appendChild(alertDiv);

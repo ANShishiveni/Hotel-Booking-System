@@ -62,6 +62,7 @@ def get_booking(booking_id):
         return jsonify({'error': 'Internal server error'}), 500
 
 @bookings_bp.route('/', methods=['POST'])
+@bookings_bp.route('', methods=['POST'])
 @jwt_required()
 def create_booking():
     """Create a new booking with concurrency control"""

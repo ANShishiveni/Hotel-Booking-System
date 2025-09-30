@@ -23,12 +23,12 @@ def run_migrations():
     try:
         # Check if migrations folder exists
         if not os.path.exists('migrations'):
-            print("ℹ️  No migrations folder found, skipping migrations")
+            print("INFO: No migrations folder found, skipping migrations")
             return
         # upgrade()  # Commented out since Flask-Migrate is not installed
-        print("ℹ️  Migrations skipped (Flask-Migrate not installed)")
+        print("INFO: Migrations skipped (Flask-Migrate not installed)")
     except Exception as e:
-        print(f"❌ Error running migrations: {e}")
+        print(f"ERROR: Error running migrations: {e}")
 
 def main():
     """Main application entry point"""

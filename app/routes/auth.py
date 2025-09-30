@@ -374,12 +374,34 @@ def change_password():
         current_app.logger.error(f"Error changing password: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
 
+@auth_bp.route('/test-auth', methods=['GET'])
+@jwt_required()
+def test_auth():
+    """Test authentication endpoint"""
+    try:
+        current_user_id = get_jwt_identity()
+        current_app.logger.info(f"Test auth - user ID: {current_user_id}")
+        user = User.query.get(current_user_id)
+        if user:
+            return jsonify({
+                'success': True,
+                'user_id': current_user_id,
+                'username': user.username,
+                'email': user.email
+            })
+        else:
+            return jsonify({'error': 'User not found'}), 404
+    except Exception as e:
+        current_app.logger.error(f"Test auth error: {str(e)}")
+        return jsonify({'error': 'Authentication failed'}), 401
+
 @auth_bp.route('/bookings', methods=['GET'])
 @jwt_required()
 def get_user_bookings():
     """Get user's bookings"""
     try:
         current_user_id = get_jwt_identity()
+        current_app.logger.info(f"Getting bookings for user ID: {current_user_id}")
         limit = request.args.get('limit', type=int)
         
         # Build query
@@ -389,6 +411,7 @@ def get_user_bookings():
             query = query.limit(limit)
         
         bookings = query.order_by(Booking.created_at.desc()).all()
+        current_app.logger.info(f"Found {len(bookings)} bookings for user {current_user_id}")
         
         # Convert to dict with hotel and room type info
         bookings_data = []

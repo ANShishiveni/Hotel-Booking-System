@@ -291,6 +291,8 @@ class Booking(db.Model):
     cancelled_at = db.Column(db.DateTime)
     
     # Relationships
+    hotel = db.relationship('Hotel', backref='bookings', lazy='select')
+    room_type = db.relationship('RoomType', backref='bookings', lazy='select')
     guests = db.relationship('Guest', backref='booking', lazy='dynamic', cascade='all, delete-orphan')
     payments = db.relationship('Payment', backref='booking', lazy='dynamic', cascade='all, delete-orphan')
     
@@ -343,9 +345,9 @@ class Booking(db.Model):
             'updated_at': self.updated_at.isoformat(),
             'confirmed_at': self.confirmed_at.isoformat() if self.confirmed_at else None,
             'cancelled_at': self.cancelled_at.isoformat() if self.cancelled_at else None,
-            'hotel': self.hotel.to_dict() if self.hotel else None,
-            'room': self.room.to_dict() if self.room else None,
-            'room_type': self.room_type.to_dict() if self.room_type else None,
+            'hotel': self.hotel.to_dict() if hasattr(self, 'hotel') and self.hotel else None,
+            'room': {'id': self.room_id} if self.room_id else None,
+            'room_type': self.room_type.to_dict() if hasattr(self, 'room_type') and self.room_type else None,
             'guests': [guest.to_dict() for guest in self.guests],
             'payments': [payment.to_dict() for payment in self.payments]
         }

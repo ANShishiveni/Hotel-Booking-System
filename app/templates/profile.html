@@ -38,7 +38,10 @@
                 <!-- Navigation -->
                 <div class="card shadow-sm mt-3">
                     <div class="list-group list-group-flush">
-                        <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="pill">
+                        <a href="#dashboard" class="list-group-item list-group-item-action active" data-bs-toggle="pill">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                        <a href="#profile" class="list-group-item list-group-item-action" data-bs-toggle="pill">
                             <i class="fas fa-user me-2"></i>Profile Information
                         </a>
                         <a href="#bookings" class="list-group-item list-group-item-action" data-bs-toggle="pill">
@@ -57,8 +60,100 @@
             <!-- Profile Content -->
             <div class="col-lg-9">
                 <div class="tab-content">
+                    <!-- Dashboard Tab -->
+                    <div class="tab-pane fade show active" id="dashboard">
+                        <div class="row">
+                            <!-- Quick Stats -->
+                            <div class="col-md-4 mb-4">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="totalBookings">0</h4>
+                                                <p class="card-text">Total Bookings</p>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-calendar-check fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-4">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="activeBookings">0</h4>
+                                                <p class="card-text">Active Bookings</p>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-check-circle fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-4">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="totalSpent">N$0</h4>
+                                                <p class="card-text">Total Spent</p>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-dollar-sign fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Bookings -->
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Recent Bookings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="recentBookings">
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-2 text-muted">Loading recent bookings...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="card shadow-sm mt-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Quick Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <a href="{{ url_for('main.hotels') }}" class="btn btn-primary w-100">
+                                            <i class="fas fa-search me-2"></i>Find Hotels
+                                        </a>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <a href="#bookings" class="btn btn-outline-primary w-100" data-bs-toggle="pill">
+                                            <i class="fas fa-calendar-check me-2"></i>View All Bookings
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Profile Information Tab -->
-                    <div class="tab-pane fade show active" id="profile">
+                    <div class="tab-pane fade" id="profile">
                         <div class="card shadow-sm">
                             <div class="card-header bg-light">
                                 <h5 class="mb-0">Profile Information</h5>
@@ -314,6 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load user profile data
     loadUserProfile();
     loadRecentBookings();
+    loadDashboardStats();
     
     // Profile form submission
     document.getElementById('profileForm').addEventListener('submit', function(e) {
@@ -354,6 +450,12 @@ function loadUserProfile() {
                 // Update sidebar
                 document.getElementById('userName').textContent = `${user.first_name} ${user.last_name}`;
                 document.getElementById('userEmail').textContent = user.email;
+                
+                // Update member since date
+                if (user.created_at) {
+                    const memberSince = new Date(user.created_at).getFullYear();
+                    document.getElementById('memberSince').textContent = `Member since ${memberSince}`;
+                }
                 
                 // Update form fields
                 document.getElementById('firstName').value = user.first_name || '';
@@ -402,6 +504,32 @@ function loadRecentBookings() {
             document.getElementById('recentBookings').innerHTML = `
                 <div class="alert alert-warning">Unable to load bookings. Please try again later.</div>
             `;
+        });
+}
+
+function loadDashboardStats() {
+    // Load booking statistics
+    fetch('/api/auth/bookings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.bookings) {
+                const bookings = data.bookings;
+                const totalBookings = bookings.length;
+                const activeBookings = bookings.filter(b => 
+                    ['confirmed', 'checked_in'].includes(b.status)
+                ).length;
+                const totalSpent = bookings
+                    .filter(b => b.status !== 'cancelled')
+                    .reduce((sum, b) => sum + parseFloat(b.total_amount || 0), 0);
+                
+                // Update dashboard stats
+                document.getElementById('totalBookings').textContent = totalBookings;
+                document.getElementById('activeBookings').textContent = activeBookings;
+                document.getElementById('totalSpent').textContent = `N$${totalSpent.toFixed(2)}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading dashboard stats:', error);
         });
 }
 
@@ -591,7 +719,7 @@ function showAlert(message, type) {
     alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
     alertDiv.innerHTML = `
         ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close alert"></button>
     `;
     
     // Insert at top of content

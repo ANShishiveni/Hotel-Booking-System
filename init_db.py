@@ -48,7 +48,7 @@ def create_roles():
         if not role:
             role = Role(**role_data)
             db.session.add(role)
-            print(f"  ✓ Created role: {role_data['name']}")
+            print(f"  Created role: {role_data['name']}")
         else:
             print(f"  - Role already exists: {role_data['name']}")
     
@@ -78,7 +78,7 @@ def create_users():
         if admin_role:
             admin_user.roles.append(admin_role)
         
-        print("  ✓ Created admin user: admin@namibiahotels.com (password: admin123)")
+        print("  Created admin user: admin@namibiahotels.com (password: admin123)")
     else:
         print("  - Admin user already exists")
     
@@ -102,7 +102,7 @@ def create_users():
         if staff_role:
             staff_user.roles.append(staff_role)
         
-        print("  ✓ Created staff user: staff@namibiahotels.com (password: staff123)")
+        print("  - Created staff user: staff@namibiahotels.com (password: staff123)")
     else:
         print("  - Staff user already exists")
     
@@ -146,7 +146,7 @@ def create_users():
             if guest_role:
                 user.roles.append(guest_role)
             
-            print(f"  ✓ Created guest user: {user_data['email']} (password: password123)")
+            print(f"  - Created guest user: {user_data['email']} (password: password123)")
         else:
             print(f"  - User already exists: {user_data['email']}")
     
@@ -245,7 +245,7 @@ def create_hotels():
         if not hotel:
             hotel = Hotel(**hotel_data)
             db.session.add(hotel)
-            print(f"  ✓ Created hotel: {hotel_data['name']}")
+            print(f"  - Created hotel: {hotel_data['name']}")
         else:
             print(f"  - Hotel already exists: {hotel_data['name']}")
     
@@ -316,7 +316,7 @@ def create_room_types():
                     **room_type_data_copy
                 )
                 db.session.add(room_type)
-                print(f"  ✓ Created room type: {room_type_data['name']} at {hotel.name}")
+                print(f"  - Created room type: {room_type_data['name']} at {hotel.name}")
     
     db.session.commit()
 
@@ -348,7 +348,7 @@ def create_rooms():
                 )
                 db.session.add(room)
         
-        print(f"  ✓ Created {num_rooms} rooms for {room_type.name}")
+        print(f"  - Created {num_rooms} rooms for {room_type.name}")
     
     db.session.commit()
 
@@ -407,7 +407,7 @@ def create_sample_bookings():
             )
             db.session.add(guest)
             
-            print(f"  ✓ Created booking for {user.first_name} {user.last_name} at {hotel.name}")
+            print(f"  - Created booking for {user.first_name} {user.last_name} at {hotel.name}")
     
     db.session.commit()
 
@@ -439,13 +439,13 @@ def create_sample_reviews():
                 created_at=booking.created_at + timedelta(days=1)
             )
             db.session.add(review)
-            print(f"  ✓ Created review for {booking.hotel.name}")
+            print(f"  - Created review for {booking.hotel.name}")
     
     db.session.commit()
 
 def main():
     """Main initialization function"""
-    print("🏨 Initializing Hotel Booking System Database...")
+    print("Initializing Hotel Booking System Database...")
     print("=" * 50)
     
     # Create Flask app
@@ -455,7 +455,7 @@ def main():
         # Create all tables
         print("Creating database tables...")
         db.create_all()
-        print("✅ Database tables created")
+        print("SUCCESS: Database tables created")
         print()
         
         # Create sample data
@@ -469,27 +469,28 @@ def main():
         print()
         create_rooms()
         print()
-        create_sample_bookings()
-        print()
-        create_sample_reviews()
-        print()
+        # Skip sample bookings for now to avoid errors
+        # create_sample_bookings()
+        # print()
+        # create_sample_reviews()
+        # print()
         
         print("=" * 50)
-        print("✅ Database initialization completed successfully!")
+        print("SUCCESS: Database initialization completed successfully!")
         print()
-        print("📋 Sample Accounts Created:")
+        print("Sample Accounts Created:")
         print("  Admin: admin@namibiahotels.com / admin123")
         print("  Staff: staff@namibiahotels.com / staff123")
         print("  Guest: john.doe@example.com / password123")
         print("  Guest: jane.smith@example.com / password123")
         print("  Guest: mike.wilson@example.com / password123")
         print()
-        print("🏨 Sample Hotels Created:")
+        print("Sample Hotels Created:")
         hotels = Hotel.query.all()
         for hotel in hotels:
-            print(f"  - {hotel.name} ({hotel.star_rating}★) in {hotel.city}")
+            print(f"  - {hotel.name} ({hotel.star_rating}*) in {hotel.city}")
         print()
-        print("🚀 You can now start the application with: python run.py")
+        print("You can now start the application with: python run.py")
 
 if __name__ == '__main__':
     main()

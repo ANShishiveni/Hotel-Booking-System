@@ -10,8 +10,8 @@ import hashlib
 
 payments_bp = Blueprint('payments', __name__)
 
-# Initialize Stripe (mock configuration)
-stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_mock_key')
+# Initialize Stripe (test mode for demonstrations)
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_demo_key_for_development')
 
 @payments_bp.route('/create-payment-intent', methods=['POST'])
 @jwt_required()
@@ -50,15 +50,19 @@ def create_payment_intent():
             return jsonify({'error': 'Booking already paid'}), 400
         
         # Create payment record
-        payment = Payment(
-            booking_id=booking.id,
-            payment_reference=Payment().generate_payment_reference(),
-            amount=booking.total_amount,
-            currency='NAD',
-            payment_method='card',
-            payment_provider='stripe',
-            status='pending'
-        )
+        try:
+            payment = Payment(
+                booking_id=booking.id,
+                payment_reference=Payment().generate_payment_reference(),
+                amount=booking.total_amount,
+                currency='NAD',
+                payment_method='card',
+                payment_provider='stripe',
+                status='pending'
+            )
+        except Exception as e:
+            current_app.logger.error(f"Error creating payment record: {str(e)}")
+            return jsonify({'error': 'Failed to create payment record'}), 500
         
         db.session.add(payment)
         db.session.flush()  # Get payment ID
@@ -76,10 +80,11 @@ def create_payment_intent():
             #     }
             # )
             
-            # Mock payment intent
+            # Mock payment intent with proper Stripe format
+            import secrets
             intent = {
                 'id': f'pi_mock_{payment.id}',
-                'client_secret': f'pi_mock_{payment.id}_secret',
+                'client_secret': f'pi_mock_{payment.id}_secret_{secrets.token_hex(12)}',
                 'amount': int(booking.total_amount * 100),
                 'currency': 'nad',
                 'status': 'requires_payment_method'
