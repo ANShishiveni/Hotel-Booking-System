@@ -44,9 +44,6 @@
                         <a href="#profile" class="list-group-item list-group-item-action" data-bs-toggle="pill">
                             <i class="fas fa-user me-2"></i>Profile Information
                         </a>
-                        <a href="#bookings" class="list-group-item list-group-item-action" data-bs-toggle="pill">
-                            <i class="fas fa-calendar-check me-2"></i>My Bookings
-                        </a>
                         <a href="#preferences" class="list-group-item list-group-item-action" data-bs-toggle="pill">
                             <i class="fas fa-cog me-2"></i>Preferences
                         </a>
@@ -113,25 +110,8 @@
                             </div>
                         </div>
                         
-                        <!-- Recent Bookings -->
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-light">
-                                <h5 class="mb-0">Recent Bookings</h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="recentBookings">
-                                    <div class="text-center py-4">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                        <p class="mt-2 text-muted">Loading recent bookings...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Quick Actions -->
-                        <div class="card shadow-sm mt-4">
+                        <div class="card shadow-sm">
                             <div class="card-header bg-light">
                                 <h5 class="mb-0">Quick Actions</h5>
                             </div>
@@ -143,7 +123,7 @@
                                         </a>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <a href="#bookings" class="btn btn-outline-primary w-100" data-bs-toggle="pill">
+                                        <a href="/my-bookings" class="btn btn-outline-primary w-100">
                                             <i class="fas fa-calendar-check me-2"></i>View All Bookings
                                         </a>
                                     </div>
@@ -225,25 +205,6 @@
                         </div>
                     </div>
 
-                    <!-- My Bookings Tab -->
-                    <div class="tab-pane fade" id="bookings">
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">My Bookings</h5>
-                                <a href="/my-bookings" class="btn btn-outline-primary btn-sm">View All</a>
-                            </div>
-                            <div class="card-body">
-                                <div id="recentBookings">
-                                    <div class="text-center py-4">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                        <p class="mt-3 text-muted">Loading your bookings...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Preferences Tab -->
                     <div class="tab-pane fade" id="preferences">
@@ -357,8 +318,8 @@
                                                 <input type="password" class="form-control" id="confirmPassword">
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-warning" id="changePassword">
-                                            <i class="fas fa-key me-2"></i>Change Password
+                                        <button type="button" class="btn btn-danger" id="changePassword">
+                                            <i class="fas fa-key me-2 text-white"></i>Change Password
                                         </button>
                                     </div>
                                     
@@ -403,12 +364,11 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Load user profile data
     loadUserProfile();
-    loadRecentBookings();
     loadDashboardStats();
     
     // Profile form submission
@@ -441,9 +401,25 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadUserProfile() {
-    fetch('/api/auth/profile')
-        .then(response => response.json())
+    console.log('=== LOADING USER PROFILE ===');
+    const authToken = localStorage.getItem('authToken');
+    
+    if (!authToken) {
+        console.error('No auth token found for profile');
+        return;
+    }
+    
+    fetch('/api/auth/profile', {
+        headers: {
+            'Authorization': `Bearer ${authToken}`
+        }
+    })
+        .then(response => {
+            console.log('Profile API response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Profile API data:', data);
             if (data.user) {
                 const user = data.user;
                 
@@ -482,36 +458,28 @@ function loadUserProfile() {
         });
 }
 
-function loadRecentBookings() {
-    fetch('/api/auth/bookings?limit=5')
-        .then(response => response.json())
-        .then(data => {
-            if (data.bookings && data.bookings.length > 0) {
-                displayRecentBookings(data.bookings);
-            } else {
-                document.getElementById('recentBookings').innerHTML = `
-                    <div class="text-center py-4">
-                        <i class="fas fa-calendar-times text-muted fa-3x mb-3"></i>
-                        <h6>No bookings yet</h6>
-                        <p class="text-muted">Start exploring our hotels!</p>
-                        <a href="/search" class="btn btn-primary">Search Hotels</a>
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('Error loading bookings:', error);
-            document.getElementById('recentBookings').innerHTML = `
-                <div class="alert alert-warning">Unable to load bookings. Please try again later.</div>
-            `;
-        });
-}
 
 function loadDashboardStats() {
+    console.log('=== LOADING DASHBOARD STATS ===');
+    const authToken = localStorage.getItem('authToken');
+    
+    if (!authToken) {
+        console.error('No auth token found for dashboard stats');
+        return;
+    }
+    
     // Load booking statistics
-    fetch('/api/auth/bookings')
-        .then(response => response.json())
+    fetch('/api/auth/bookings', {
+        headers: {
+            'Authorization': `Bearer ${authToken}`
+        }
+    })
+        .then(response => {
+            console.log('Dashboard stats API response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Dashboard stats API data:', data);
             if (data.bookings) {
                 const bookings = data.bookings;
                 const totalBookings = bookings.length;
@@ -533,33 +501,6 @@ function loadDashboardStats() {
         });
 }
 
-function displayRecentBookings(bookings) {
-    const container = document.getElementById('recentBookings');
-    container.innerHTML = '';
-    
-    bookings.forEach(booking => {
-        const div = document.createElement('div');
-        div.className = 'border-bottom pb-3 mb-3';
-        div.innerHTML = `
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h6 class="mb-1">${booking.hotel_name}</h6>
-                    <p class="text-muted mb-1">
-                        ${new Date(booking.check_in_date).toLocaleDateString()} - ${new Date(booking.check_out_date).toLocaleDateString()}
-                    </p>
-                    <small class="text-muted">Booking #${booking.booking_reference}</small>
-                </div>
-                <div class="col-md-4 text-end">
-                    <span class="badge ${getStatusBadgeClass(booking.status)}">${booking.status}</span>
-                    <div class="mt-2">
-                        <strong>N$${booking.total_amount}</strong>
-                    </div>
-                </div>
-            </div>
-        `;
-        container.appendChild(div);
-    });
-}
 
 function getStatusBadgeClass(status) {
     switch(status.toLowerCase()) {

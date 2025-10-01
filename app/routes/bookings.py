@@ -6,14 +6,48 @@ from datetime import datetime, date, timedelta
 from sqlalchemy import and_, or_, func, select, update
 from sqlalchemy.exc import IntegrityError
 import uuid
+from decimal import Decimal
 
 bookings_bp = Blueprint('bookings', __name__)
+
+def update_booking_statuses():
+    """Automatically update booking statuses based on current date"""
+    try:
+        today = date.today()
+        updated_count = 0
+        
+        # Update confirmed bookings to checked_in if check-in date is today or past
+        confirmed_bookings = Booking.query.filter_by(status='confirmed').all()
+        for booking in confirmed_bookings:
+            if booking.check_in_date <= today:
+                booking.status = 'checked_in'
+                updated_count += 1
+                current_app.logger.info(f"Auto-updated booking {booking.id} from confirmed to checked_in")
+        
+        # Update checked_in bookings to checked_out if check-out date has passed
+        checked_in_bookings = Booking.query.filter_by(status='checked_in').all()
+        for booking in checked_in_bookings:
+            if booking.check_out_date < today:
+                booking.status = 'checked_out'
+                updated_count += 1
+                current_app.logger.info(f"Auto-updated booking {booking.id} from checked_in to checked_out")
+        
+        if updated_count > 0:
+            db.session.commit()
+            current_app.logger.info(f"Auto-updated {updated_count} booking statuses")
+            
+    except Exception as e:
+        current_app.logger.error(f"Error updating booking statuses: {str(e)}")
+        db.session.rollback()
 
 @bookings_bp.route('/', methods=['GET'])
 @jwt_required()
 def get_user_bookings():
     """Get all bookings for the current user"""
     try:
+        # Auto-update booking statuses before fetching
+        update_booking_statuses()
+        
         current_user_id = get_jwt_identity()
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
@@ -286,53 +320,54 @@ def cancel_booking(booking_id):
         data = request.get_json() or {}
         cancellation_reason = data.get('reason', '')
         
-        # Start transaction
-        with db.session.begin():
-            # Lock booking for update
-            booking = db.session.query(Booking)\
-                .filter_by(id=booking_id, user_id=current_user_id)\
-                .with_for_update()\
-                .first()
-            
-            if not booking:
-                return jsonify({'error': 'Booking not found'}), 404
-            
-            if booking.status in ['cancelled', 'checked_out']:
-                return jsonify({'error': f'Booking cannot be cancelled. Current status: {booking.status}'}), 400
-            
-            # Check cancellation policy
-            days_until_checkin = (booking.check_in_date - date.today()).days
-            cancellation_fee = 0
-            
-            if days_until_checkin < 1:
-                cancellation_fee = booking.total_amount  # No refund for same-day cancellation
-            elif days_until_checkin < 3:
-                cancellation_fee = booking.total_amount * 0.5  # 50% fee for 1-2 days
-            elif days_until_checkin < 7:
-                cancellation_fee = booking.total_amount * 0.25  # 25% fee for 3-6 days
-            
-            # Update booking status
-            booking.status = 'cancelled'
-            booking.cancelled_at = datetime.utcnow()
-            if cancellation_reason:
-                booking.guest_notes = f"{booking.guest_notes or ''}\nCancellation reason: {cancellation_reason}"
-            
-            # Create audit log
-            audit_log = AuditLog(
-                table_name='bookings',
-                record_id=booking.id,
-                action='UPDATE',
-                old_values={'status': booking.status, 'cancelled_at': None},
-                new_values={
-                    'status': 'cancelled', 
-                    'cancelled_at': booking.cancelled_at.isoformat(),
-                    'cancellation_fee': cancellation_fee
-                },
-                user_id=current_user_id,
-                ip_address=request.remote_addr,
-                user_agent=request.headers.get('User-Agent')
-            )
-            db.session.add(audit_log)
+        # Lock booking for update
+        booking = db.session.query(Booking)\
+            .filter_by(id=booking_id, user_id=current_user_id)\
+            .with_for_update()\
+            .first()
+        
+        if not booking:
+            return jsonify({'error': 'Booking not found'}), 404
+        
+        if booking.status in ['cancelled', 'checked_out']:
+            return jsonify({'error': f'Booking cannot be cancelled. Current status: {booking.status}'}), 400
+        
+        # Check cancellation policy
+        days_until_checkin = (booking.check_in_date - date.today()).days
+        cancellation_fee = Decimal('0')
+        
+        if days_until_checkin < 1:
+            cancellation_fee = booking.total_amount  # No refund for same-day cancellation
+        elif days_until_checkin < 3:
+            cancellation_fee = booking.total_amount * Decimal('0.5')  # 50% fee for 1-2 days
+        elif days_until_checkin < 7:
+            cancellation_fee = booking.total_amount * Decimal('0.25')  # 25% fee for 3-6 days
+        
+        # Update booking status
+        booking.status = 'cancelled'
+        booking.cancelled_at = datetime.utcnow()
+        if cancellation_reason:
+            booking.guest_notes = f"{booking.guest_notes or ''}\nCancellation reason: {cancellation_reason}"
+        
+        # Create audit log
+        audit_log = AuditLog(
+            table_name='bookings',
+            record_id=booking.id,
+            action='UPDATE',
+            old_values={'status': booking.status, 'cancelled_at': None},
+            new_values={
+                'status': 'cancelled', 
+                'cancelled_at': booking.cancelled_at.isoformat(),
+                'cancellation_fee': float(cancellation_fee)
+            },
+            user_id=current_user_id,
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+        db.session.add(audit_log)
+        
+        # Commit the transaction
+        db.session.commit()
         
         refund_amount = booking.total_amount - cancellation_fee
         
@@ -340,8 +375,8 @@ def cancel_booking(booking_id):
             'message': 'Booking cancelled successfully',
             'booking': booking.to_dict(),
             'cancellation_details': {
-                'cancellation_fee': cancellation_fee,
-                'refund_amount': refund_amount,
+                'cancellation_fee': float(cancellation_fee),
+                'refund_amount': float(refund_amount),
                 'days_until_checkin': days_until_checkin
             }
         })

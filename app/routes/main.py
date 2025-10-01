@@ -7,6 +7,41 @@ import pytz
 
 main_bp = Blueprint('main', __name__)
 
+@main_bp.route('/test-js')
+def test_js():
+    """Test JavaScript execution"""
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>JavaScript Test</title>
+    </head>
+    <body>
+        <h1>JavaScript Execution Test</h1>
+        <p>This page should show console messages immediately when loaded.</p>
+        
+        <script>
+            console.log('=== JAVASCRIPT IS WORKING ===');
+            console.log('This message should appear in the main Console tab');
+            console.log('Current time:', new Date().toLocaleTimeString());
+            
+            // Test if we can access localStorage
+            try {
+                const token = localStorage.getItem('authToken');
+                console.log('localStorage access test:', token ? 'Token found' : 'No token');
+            } catch (e) {
+                console.error('localStorage error:', e);
+            }
+            
+            // Test if we can make fetch requests
+            console.log('Testing fetch availability:', typeof fetch !== 'undefined' ? 'Available' : 'Not available');
+            
+            console.log('=== ALL TESTS COMPLETE ===');
+        </script>
+    </body>
+    </html>
+    """
+
 @main_bp.route('/')
 def index():
     """Home page with featured hotels"""
@@ -393,10 +428,29 @@ def about():
 def api_stats():
     """Get system statistics"""
     try:
+        # Import and call the booking status update function
+        from app.routes.bookings import update_booking_statuses
+        update_booking_statuses()
+        
+        # Count available rooms (rooms not currently booked)
+        available_rooms = db.session.query(Room)\
+            .outerjoin(Booking, and_(
+                Booking.room_id == Room.id,
+                Booking.status.in_(['confirmed', 'checked_in']),
+                or_(
+                    and_(Booking.check_in_date <= date.today(), Booking.check_out_date > date.today()),
+                    and_(Booking.check_in_date > date.today())
+                )
+            ))\
+            .filter(
+                Room.is_active == True,
+                Booking.id.is_(None)
+            ).count()
+        
         stats = {
             'hotels': Hotel.query.filter_by(is_active=True).count(),
-            'rooms': Room.query.filter_by(is_active=True).count(),
-            'bookings': Booking.query.count(),
+            'rooms': available_rooms,
+            'bookings': Booking.query.filter(Booking.status.in_(['confirmed', 'pending', 'checked_in'])).count(),
             'reviews': Review.query.filter_by(is_active=True).count()
         }
         return jsonify(stats)
