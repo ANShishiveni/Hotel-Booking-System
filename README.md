@@ -483,4 +483,3 @@ For support and questions:
 ---
 
 **Built with love in Namibia**
-**University of Namibia - 2025**
