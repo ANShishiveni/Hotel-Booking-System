@@ -522,10 +522,17 @@ function saveProfile() {
         username: document.getElementById('username').value
     };
     
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        showAlert('Please login to update profile', 'danger');
+        return;
+    }
+    
     fetch('/api/auth/profile', {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify(formData)
     })
@@ -626,10 +633,17 @@ function changePassword() {
         return;
     }
     
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        showAlert('Please login to change password', 'danger');
+        return;
+    }
+    
     fetch('/api/auth/change-password', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
             current_password: currentPassword,

@@ -2,7 +2,7 @@
 
 A comprehensive, production-grade hotel booking system built with Flask, SQLAlchemy, PostgreSQL, and Bootstrap. This system provides a complete solution for hotel reservations with advanced features including concurrency controls, payment processing, review systems, and administrative tools.
 
-## 🌟 Features
+## Features
 
 ### Core Functionality
 - **Hotel Management**: Complete CRUD operations for hotels, room types, and rooms
@@ -28,7 +28,7 @@ A comprehensive, production-grade hotel booking system built with Flask, SQLAlch
 - **Rate Limiting**: Protection against abuse and DoS attacks
 - **Audit Trail**: Complete logging of all critical operations
 
-## 🏗️ Architecture
+## Architecture
 
 ### Technology Stack
 - **Backend**: Flask 2.3+ with Python 3.9+
@@ -48,7 +48,7 @@ The system uses a normalized database schema with the following key entities:
 - **Reviews**: Guest review system with verification
 - **Audit Logs**: Complete change tracking
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Python 3.9 or higher
@@ -127,7 +127,7 @@ The application will be available at `http://localhost:5000`
    pytest tests/ -v
    ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 hotel-booking-system/
@@ -210,7 +210,7 @@ The system supports multiple database configurations:
 - **Testing**: Separate test database
 - **Production**: PostgreSQL with connection pooling
 
-## 🧪 Testing
+##  Testing
 
 The project includes comprehensive testing with the following categories:
 
@@ -240,7 +240,7 @@ pytest --cov=app tests/
 coverage html
 ```
 
-## 🚀 Deployment
+## Deployment
 
 ### Production Deployment
 
@@ -290,7 +290,7 @@ docker run -d -p 5000:5000 \
   hotel-booking-system
 ```
 
-## 📚 API Documentation
+## API Documentation
 
 The API provides comprehensive RESTful endpoints for all functionality. See [API_DOCS.md](API_DOCS.md) for complete documentation including:
 
@@ -370,7 +370,7 @@ The system implements comprehensive security measures:
 
 See [SECURITY.md](SECURITY.md) for the complete security checklist.
 
-## 🎨 Frontend
+## Frontend
 
 The frontend is built with Bootstrap 5.3 and includes:
 
@@ -421,7 +421,7 @@ flask db upgrade
 flask db downgrade
 ```
 
-## 📊 Monitoring & Analytics
+## Monitoring & Analytics
 
 ### Admin Dashboard
 The admin dashboard provides:
@@ -437,7 +437,7 @@ The admin dashboard provides:
 - Error tracking
 - Performance monitoring
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -462,18 +462,18 @@ black app/
 pytest tests/ -v --cov=app
 ```
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## Support
 
 For support and questions:
 - **Email**: support@namibiahotels.com
 - **Documentation**: [API Documentation](API_DOCS.md)
 - **Issues**: [GitHub Issues](https://github.com/your-username/hotel-booking-system/issues)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Flask community for the excellent framework
 - Bootstrap team for the responsive framework
@@ -482,4 +482,5 @@ For support and questions:
 
 ---
 
-**Built with ❤️ in Namibia**
+**Built with love in Namibia**
+**University of Namibia - 2025**

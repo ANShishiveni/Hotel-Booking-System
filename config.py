@@ -10,12 +10,15 @@ class Config:
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
     
     # Mail configuration
-    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'localhost'
-    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 1025)
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'false').lower() in ['true', 'on', '1']
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'noreply@hotelbooking.com'
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or 'absalomshishiveni67@gmail.com'
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or 'trcz wono prpq jsmo'
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'Namibia Hotels <noreply@namibiahotels.com>'
+    
+    # Admin email for contact notifications
+    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL') or 'admin@namibiahotels.com'
     
     # File uploads
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or 'uploads'

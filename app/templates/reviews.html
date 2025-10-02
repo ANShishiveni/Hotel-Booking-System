@@ -1,0 +1,652 @@
+{% extends "base.html" %}
+
+{% block title %}Guest Reviews - Hotel Booking System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 text-primary mb-3">
+                Guest Reviews
+            </h1>
+            <p class="lead text-muted">Read what our guests have to say about their hotel experiences</p>
+        </div>
+    </div>
+
+
+    <!-- Filters and Search -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <label for="hotelFilter" class="form-label">Filter by Hotel</label>
+                            <select class="form-select" id="hotelFilter">
+                                <option value="">All Hotels</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-6 mb-3">
+                            <label for="ratingFilter" class="form-label">Filter by Rating</label>
+                            <select class="form-select" id="ratingFilter">
+                                <option value="">All Ratings</option>
+                                <option value="5">5 Stars</option>
+                                <option value="4">4 Stars</option>
+                                <option value="3">3 Stars</option>
+                                <option value="2">2 Stars</option>
+                                <option value="1">1 Star</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-6 mb-3">
+                            <label for="verifiedFilter" class="form-label">Review Type</label>
+                            <select class="form-select" id="verifiedFilter">
+                                <option value="">All Reviews</option>
+                                <option value="true">Verified Only</option>
+                                <option value="false">General Only</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <label for="searchReviews" class="form-label">Search Reviews</label>
+                            <input type="text" class="form-control" id="searchReviews" placeholder="Search by comment or guest name...">
+                        </div>
+                        <div class="col-lg-2 col-md-12 mb-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-primary" id="filterReviews">
+                                    <i class="fas fa-filter me-2"></i>Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Review Section (for logged-in users) -->
+    <div id="createReviewSection" class="row mb-4" style="display: none;">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Write a Review
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="reviewForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="reviewHotel" class="form-label">Select Hotel</label>
+                                <select class="form-select" id="reviewHotel" required>
+                                    <option value="">Choose a hotel...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="reviewRating" class="form-label">Your Rating</label>
+                                <div class="rating-input">
+                                    <div class="star-rating" id="starRating">
+                                        <i class="far fa-star" data-rating="1"></i>
+                                        <i class="far fa-star" data-rating="2"></i>
+                                        <i class="far fa-star" data-rating="3"></i>
+                                        <i class="far fa-star" data-rating="4"></i>
+                                        <i class="far fa-star" data-rating="5"></i>
+                                    </div>
+                                    <input type="hidden" id="reviewRatingValue" value="0" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reviewTitle" class="form-label">Review Title (Optional)</label>
+                            <input type="text" class="form-control" id="reviewTitle" placeholder="Give your review a title...">
+                        </div>
+                        <div class="mb-3">
+                            <label for="reviewComment" class="form-label">Your Review</label>
+                            <textarea class="form-control" id="reviewComment" rows="4" placeholder="Share your experience..." required></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-outline-secondary" id="cancelReview">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Review
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>All Reviews</h3>
+                <button type="button" class="btn btn-outline-primary" id="toggleCreateReview">
+                    <i class="fas fa-plus me-2"></i>Write Review
+                </button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="reviewsLoading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading reviews...</span>
+                </div>
+                <p class="mt-3 text-muted">Loading reviews...</p>
+            </div>
+
+            <!-- Reviews Container -->
+            <div id="reviewsContainer" style="display: none;">
+                <!-- Reviews will be loaded here -->
+            </div>
+
+            <!-- No Reviews Message -->
+            <div id="noReviewsMessage" class="text-center py-5" style="display: none;">
+                <i class="fas fa-comment-slash fa-4x text-muted mb-4"></i>
+                <h4>No Reviews Found</h4>
+                <p class="text-muted">Try adjusting your filters or check back later for new reviews.</p>
+            </div>
+
+            <!-- Pagination -->
+            <nav id="reviewsPagination" class="mt-4" style="display: none;">
+                <ul class="pagination justify-content-center">
+                    <!-- Pagination will be generated here -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Review Detail Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Review Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Review details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.star-rating {
+    font-size: 1.5rem;
+    color: #ffc107;
+    cursor: pointer;
+}
+
+.star-rating .fa-star {
+    transition: all 0.2s ease;
+}
+
+.star-rating .fa-star:hover,
+.star-rating .fa-star.active {
+    color: #ffc107;
+    transform: scale(1.1);
+}
+
+.review-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.review-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.rating-stars {
+    color: #ffc107;
+}
+
+.verified-badge {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.review-stats {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.review-stats .card {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+}
+
+.filter-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+let currentFilters = {};
+let allReviews = [];
+let allHotels = [];
+
+$(document).ready(function() {
+    loadHotels();
+    loadReviews();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    // Filter controls
+    $('#filterReviews').on('click', function() {
+        currentPage = 1;
+        loadReviews();
+    });
+
+    $('#hotelFilter, #ratingFilter, #verifiedFilter').on('change', function() {
+        currentPage = 1;
+        loadReviews();
+    });
+
+    $('#searchReviews').on('input', debounce(function() {
+        currentPage = 1;
+        loadReviews();
+    }, 300));
+
+    // Review creation
+    $('#toggleCreateReview').on('click', function() {
+        $('#createReviewSection').toggle();
+        if ($('#createReviewSection').is(':visible')) {
+            $(this).html('<i class="fas fa-times me-2"></i>Cancel');
+        } else {
+            $(this).html('<i class="fas fa-plus me-2"></i>Write Review');
+        }
+    });
+
+    $('#cancelReview').on('click', function() {
+        $('#createReviewSection').hide();
+        $('#toggleCreateReview').html('<i class="fas fa-plus me-2"></i>Write Review');
+        $('#reviewForm')[0].reset();
+        resetStarRating();
+    });
+
+    // Star rating
+    $('.star-rating .fa-star').on('click', function() {
+        const rating = parseInt($(this).data('rating'));
+        setStarRating(rating);
+    });
+
+    $('.star-rating .fa-star').on('mouseenter', function() {
+        const rating = parseInt($(this).data('rating'));
+        highlightStars(rating);
+    });
+
+    $('.star-rating').on('mouseleave', function() {
+        const currentRating = parseInt($('#reviewRatingValue').val());
+        highlightStars(currentRating);
+    });
+
+    // Review form submission
+    $('#reviewForm').on('submit', function(e) {
+        e.preventDefault();
+        submitReview();
+    });
+
+    // Check authentication status
+    checkAuthStatus();
+}
+
+function checkAuthStatus() {
+    const authToken = localStorage.getItem('authToken');
+    if (authToken) {
+        $('#toggleCreateReview').show();
+        
+        // Test if token is still valid
+        fetch('/api/auth/test-auth', {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                // Token is invalid, clear it
+                localStorage.removeItem('authToken');
+                $('#toggleCreateReview').hide();
+            }
+        })
+        .catch(error => {
+            console.error('Auth check failed:', error);
+            localStorage.removeItem('authToken');
+            $('#toggleCreateReview').hide();
+        });
+    } else {
+        $('#toggleCreateReview').hide();
+    }
+}
+
+
+function loadHotels() {
+    fetch('/api/hotels')
+        .then(response => response.json())
+        .then(data => {
+            allHotels = data.hotels || [];
+            
+            // Populate hotel filters
+            const hotelFilter = $('#hotelFilter');
+            const reviewHotel = $('#reviewHotel');
+            
+            hotelFilter.append('<option value="">All Hotels</option>');
+            reviewHotel.append('<option value="">Choose a hotel...</option>');
+            
+            allHotels.forEach(hotel => {
+                hotelFilter.append(`<option value="${hotel.id}">${hotel.name}</option>`);
+                reviewHotel.append(`<option value="${hotel.id}">${hotel.name}</option>`);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading hotels:', error);
+        });
+}
+
+function loadReviews() {
+    $('#reviewsLoading').show();
+    $('#reviewsContainer').hide();
+    $('#noReviewsMessage').hide();
+
+    // Build query parameters
+    const params = new URLSearchParams({
+        page: currentPage,
+        per_page: 10
+    });
+
+    if ($('#hotelFilter').val()) {
+        params.append('hotel_id', $('#hotelFilter').val());
+    }
+    if ($('#ratingFilter').val()) {
+        params.append('rating', $('#ratingFilter').val());
+    }
+    if ($('#verifiedFilter').val()) {
+        params.append('verified_only', $('#verifiedFilter').val());
+    }
+    if ($('#searchReviews').val()) {
+        params.append('search', $('#searchReviews').val());
+    }
+
+    fetch(`/api/reviews?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            $('#reviewsLoading').hide();
+            
+            if (data.reviews && data.reviews.length > 0) {
+                allReviews = data.reviews;
+                displayReviews(data.reviews);
+                setupPagination(data.pagination);
+                $('#reviewsContainer').show();
+            } else {
+                $('#noReviewsMessage').show();
+            }
+        })
+        .catch(error => {
+            $('#reviewsLoading').hide();
+            $('#noReviewsMessage').show();
+            console.error('Error loading reviews:', error);
+            showAlert('Error loading reviews. Please try again.', 'danger');
+        });
+}
+
+function displayReviews(reviews) {
+    const container = $('#reviewsContainer');
+    container.empty();
+
+    reviews.forEach(review => {
+        const hotel = allHotels.find(h => h.id === review.hotel_id);
+        const hotelName = hotel ? hotel.name : 'Unknown Hotel';
+        
+        const reviewHtml = `
+            <div class="col-lg-6 mb-4">
+                <div class="card review-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="mb-1">${review.user ? review.user.first_name + ' ' + review.user.last_name : 'Anonymous'}</h6>
+                                <small class="text-muted">${hotelName}</small>
+                                <br>
+                                <small class="text-muted">${formatDate(review.created_at)}</small>
+                            </div>
+                            <div class="text-end">
+                                ${review.is_verified ? '<span class="verified-badge"><i class="fas fa-check me-1"></i>Verified</span>' : ''}
+                                <div class="rating-stars mt-2">
+                                    ${generateStarRating(review.rating)}
+                                </div>
+                            </div>
+                        </div>
+                        ${review.title ? `<h6 class="card-title">${review.title}</h6>` : ''}
+                        <p class="card-text">${review.comment}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Rating: ${review.rating}/5</small>
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewReviewDetails(${review.id})">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.append(`<div class="row">${reviewHtml}</div>`);
+    });
+}
+
+function generateStarRating(rating) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= rating) {
+            stars += '<i class="fas fa-star"></i>';
+        } else {
+            stars += '<i class="far fa-star"></i>';
+        }
+    }
+    return stars;
+}
+
+function setStarRating(rating) {
+    $('#reviewRatingValue').val(rating);
+    highlightStars(rating);
+}
+
+function highlightStars(rating) {
+    $('.star-rating .fa-star').each(function(index) {
+        if (index < rating) {
+            $(this).removeClass('far').addClass('fas');
+        } else {
+            $(this).removeClass('fas').addClass('far');
+        }
+    });
+}
+
+function resetStarRating() {
+    setStarRating(0);
+}
+
+function submitReview() {
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        showAlert('Please login to submit a review', 'danger');
+        return;
+    }
+
+    const reviewData = {
+        hotel_id: parseInt($('#reviewHotel').val()),
+        rating: parseInt($('#reviewRatingValue').val()),
+        title: $('#reviewTitle').val(),
+        comment: $('#reviewComment').val()
+    };
+
+    if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
+        showAlert('Please select a rating', 'danger');
+        return;
+    }
+
+    fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(reviewData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            showAlert('✅ Your review has been submitted successfully! Thank you for sharing your experience.', 'success');
+            $('#reviewForm')[0].reset();
+            resetStarRating();
+            $('#createReviewSection').hide();
+            $('#toggleCreateReview').html('<i class="fas fa-plus me-2"></i>Write Review');
+            loadReviews();
+        } else {
+            showAlert(data.error || 'Error submitting review', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error submitting review:', error);
+        showAlert('Error submitting review. Please try again.', 'danger');
+    });
+}
+
+function viewReviewDetails(reviewId) {
+    const review = allReviews.find(r => r.id === reviewId);
+    if (!review) return;
+
+    const hotel = allHotels.find(h => h.id === review.hotel_id);
+    const hotelName = hotel ? hotel.name : 'Unknown Hotel';
+
+    const modalBody = `
+        <div class="row">
+            <div class="col-md-4">
+                <h6>Guest Information</h6>
+                <p><strong>Name:</strong> ${review.user ? review.user.first_name + ' ' + review.user.last_name : 'Anonymous'}</p>
+                <p><strong>Hotel:</strong> ${hotelName}</p>
+                <p><strong>Date:</strong> ${formatDate(review.created_at)}</p>
+                <p><strong>Verified:</strong> ${review.is_verified ? '<span class="text-success"><i class="fas fa-check"></i> Yes</span>' : '<span class="text-muted">No</span>'}</p>
+            </div>
+            <div class="col-md-8">
+                <h6>Review Details</h6>
+                <div class="rating-stars mb-3">
+                    ${generateStarRating(review.rating)}
+                    <span class="ms-2">(${review.rating}/5)</span>
+                </div>
+                ${review.title ? `<h5>${review.title}</h5>` : ''}
+                <p>${review.comment}</p>
+            </div>
+        </div>
+    `;
+
+    $('#reviewModal .modal-body').html(modalBody);
+    $('#reviewModal').modal('show');
+}
+
+function setupPagination(pagination) {
+    const paginationContainer = $('#reviewsPagination');
+    paginationContainer.empty();
+
+    if (pagination.pages <= 1) {
+        paginationContainer.hide();
+        return;
+    }
+
+    paginationContainer.show();
+
+    // Previous button
+    const prevBtn = `
+        <li class="page-item ${!pagination.has_prev ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${pagination.page - 1})">Previous</a>
+        </li>
+    `;
+    paginationContainer.find('ul').append(prevBtn);
+
+    // Page numbers
+    for (let i = 1; i <= pagination.pages; i++) {
+        if (i === pagination.page || Math.abs(i - pagination.page) <= 2 || i === 1 || i === pagination.pages) {
+            const pageBtn = `
+                <li class="page-item ${i === pagination.page ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                </li>
+            `;
+            paginationContainer.find('ul').append(pageBtn);
+        } else if (i === pagination.page - 3 || i === pagination.page + 3) {
+            paginationContainer.find('ul').append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+        }
+    }
+
+    // Next button
+    const nextBtn = `
+        <li class="page-item ${!pagination.has_next ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${pagination.page + 1})">Next</a>
+        </li>
+    `;
+    paginationContainer.find('ul').append(nextBtn);
+}
+
+function changePage(page) {
+    currentPage = page;
+    loadReviews();
+    $('html, body').animate({ scrollTop: 0 }, 'slow');
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function showAlert(message, type) {
+    // Remove any existing alerts first
+    $('.alert').remove();
+    
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed" role="alert" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'danger' ? 'fa-exclamation-triangle' : 'fa-info-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close alert"></button>
+        </div>
+    `;
+    
+    $('body').prepend(alertHtml);
+    
+    // Auto-hide after longer time for success messages
+    const hideTime = type === 'success' ? 8000 : 5000;
+    setTimeout(() => {
+        $('.alert').fadeOut(500, function() {
+            $(this).remove();
+        });
+    }, hideTime);
+}
+</script>
+{% endblock %}

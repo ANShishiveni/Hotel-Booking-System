@@ -7,7 +7,37 @@ from sqlalchemy import and_, func, desc
 
 reviews_bp = Blueprint('reviews', __name__)
 
+@reviews_bp.route('/stats', methods=['GET'])
+def get_review_stats():
+    """Get review statistics"""
+    try:
+        # Total reviews
+        total_reviews = Review.query.filter_by(is_active=True).count()
+        
+        # Average rating
+        avg_rating = db.session.query(func.avg(Review.rating))\
+            .filter_by(is_active=True).scalar()
+        
+        # Verified reviews
+        verified_reviews = Review.query.filter_by(is_active=True, is_verified=True).count()
+        
+        # Number of hotels that have been reviewed
+        reviewed_hotels = db.session.query(func.count(func.distinct(Review.hotel_id)))\
+            .filter_by(is_active=True).scalar()
+        
+        return jsonify({
+            'total_reviews': total_reviews,
+            'average_rating': float(avg_rating) if avg_rating else 0,
+            'verified_reviews': verified_reviews,
+            'reviewed_hotels': reviewed_hotels
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting review stats: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
 @reviews_bp.route('/', methods=['GET'])
+@reviews_bp.route('', methods=['GET'])
 def get_reviews():
     """Get all reviews with filtering and pagination"""
     try:
@@ -16,18 +46,30 @@ def get_reviews():
         hotel_id = request.args.get('hotel_id', type=int)
         rating = request.args.get('rating', type=int)
         verified_only = request.args.get('verified_only', 'false').lower() == 'true'
+        search = request.args.get('search', '').strip()
         
-        # Build query
-        query = Review.query.filter_by(is_active=True)
+        # Build query with joins for search functionality
+        query = Review.query.join(User, Review.user_id == User.id).filter(Review.is_active == True)
         
         if hotel_id:
-            query = query.filter_by(hotel_id=hotel_id)
+            query = query.filter(Review.hotel_id == hotel_id)
         
         if rating:
-            query = query.filter_by(rating=rating)
+            query = query.filter(Review.rating == rating)
         
         if verified_only:
-            query = query.filter_by(is_verified=True)
+            query = query.filter(Review.is_verified == True)
+        
+        # Search functionality
+        if search:
+            search_filter = or_(
+                Review.comment.ilike(f'%{search}%'),
+                Review.title.ilike(f'%{search}%'),
+                User.first_name.ilike(f'%{search}%'),
+                User.last_name.ilike(f'%{search}%'),
+                User.username.ilike(f'%{search}%')
+            )
+            query = query.filter(search_filter)
         
         reviews = query.order_by(desc(Review.created_at)).paginate(
             page=page, per_page=per_page, error_out=False
@@ -65,6 +107,7 @@ def get_review(review_id):
         return jsonify({'error': 'Internal server error'}), 500
 
 @reviews_bp.route('/', methods=['POST'])
+@reviews_bp.route('', methods=['POST'])
 @jwt_required()
 def create_review():
     """Create a new review"""
@@ -100,11 +143,11 @@ def create_review():
         
         # If booking_id provided, verify user has a completed booking
         if booking_id:
-            booking = Booking.query.filter_by(
-                id=booking_id,
-                user_id=current_user_id,
-                hotel_id=hotel_id,
-                status='checked_out'
+            booking = Booking.query.filter(
+                Booking.id == booking_id,
+                Booking.user_id == current_user_id,
+                Booking.hotel_id == hotel_id,
+                Booking.status.in_(['confirmed', 'checked_in', 'checked_out'])
             ).first()
             
             if not booking:
@@ -121,10 +164,11 @@ def create_review():
                 return jsonify({'error': 'Review already exists for this booking'}), 409
         else:
             # Check if user has any completed bookings at this hotel
-            has_booking = Booking.query.filter_by(
-                user_id=current_user_id,
-                hotel_id=hotel_id,
-                status='checked_out'
+            # Allow reviews for confirmed, checked_in, or checked_out bookings
+            has_booking = Booking.query.filter(
+                Booking.user_id == current_user_id,
+                Booking.hotel_id == hotel_id,
+                Booking.status.in_(['confirmed', 'checked_in', 'checked_out'])
             ).first()
             
             if not has_booking:

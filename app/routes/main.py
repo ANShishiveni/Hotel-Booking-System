@@ -357,12 +357,25 @@ def contact_submit():
                     'error': f'{field} is required'
                 }), 400
         
-        # Here you would typically:
-        # 1. Send an email to the admin
-        # 2. Store the message in the database
-        # 3. Send a confirmation email to the user
+        # Add timestamp to contact data
+        from datetime import datetime
+        contact_data = type('ContactData', (), {
+            'firstName': data['firstName'],
+            'lastName': data['lastName'],
+            'email': data['email'],
+            'subject': data['subject'],
+            'message': data['message'],
+            'submitted_at': datetime.utcnow()
+        })()
         
-        # For now, just log the message
+        # Send notification email to admin
+        try:
+            from app.services.email_service import EmailService
+            EmailService.send_contact_notification(contact_data)
+        except Exception as email_error:
+            current_app.logger.error(f"Failed to send contact notification email: {str(email_error)}")
+        
+        # Log the message
         current_app.logger.info(f"Contact form submission from {data['email']}: {data['subject']}")
         
         return jsonify({
@@ -423,6 +436,11 @@ def my_bookings_page():
 def about():
     """About page"""
     return render_template('about.html')
+
+@main_bp.route('/reviews')
+def reviews():
+    """Reviews page"""
+    return render_template('reviews.html')
 
 @main_bp.route('/api/stats')
 def api_stats():

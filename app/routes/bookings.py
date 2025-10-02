@@ -302,6 +302,13 @@ def confirm_booking(booking_id):
             )
             db.session.add(audit_log)
         
+        # Send booking confirmation email
+        try:
+            from app.services.email_service import EmailService
+            EmailService.send_booking_confirmation(booking)
+        except Exception as email_error:
+            current_app.logger.error(f"Failed to send booking confirmation email: {str(email_error)}")
+        
         return jsonify({
             'message': 'Booking confirmed successfully',
             'booking': booking.to_dict()

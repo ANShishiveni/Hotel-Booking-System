@@ -182,6 +182,13 @@ def confirm_payment():
                 
                 db.session.commit()
                 
+                # Send payment confirmation email
+                try:
+                    from app.services.email_service import EmailService
+                    EmailService.send_payment_confirmation(payment)
+                except Exception as email_error:
+                    current_app.logger.error(f"Failed to send payment confirmation email: {str(email_error)}")
+                
                 return jsonify({
                     'message': 'Payment confirmed successfully',
                     'payment': payment.to_dict(),

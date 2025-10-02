@@ -89,6 +89,13 @@ def register():
         access_token = create_access_token(identity=user)
         refresh_token = create_refresh_token(identity=user)
         
+        # Send welcome email
+        try:
+            from app.services.email_service import EmailService
+            EmailService.send_registration_welcome(user)
+        except Exception as email_error:
+            current_app.logger.error(f"Failed to send welcome email: {str(email_error)}")
+        
         return jsonify({
             'message': 'User registered successfully',
             'access_token': access_token,
@@ -310,7 +317,24 @@ def forgot_password():
         user = User.query.filter_by(email=email).first()
         
         # Always return success to prevent email enumeration
-        # In a real application, you would send a reset email
+        if user:
+            # Generate reset token (simple implementation)
+            import secrets
+            reset_token = secrets.token_urlsafe(32)
+            
+            # Store token in user model (you might want a separate table for this)
+            # For now, we'll use a simple approach
+            user.reset_token = reset_token
+            user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+            db.session.commit()
+            
+            # Send password reset email
+            try:
+                from app.services.email_service import EmailService
+                EmailService.send_password_reset(user, reset_token)
+            except Exception as email_error:
+                current_app.logger.error(f"Failed to send password reset email: {str(email_error)}")
+        
         return jsonify({'message': 'If the email exists, a password reset link has been sent'})
         
     except Exception as e:
@@ -325,9 +349,35 @@ def reset_password():
         if not data or not all(k in data for k in ['token', 'new_password']):
             return jsonify({'error': 'Token and new password are required'}), 400
         
-        # In a real application, you would validate the reset token
-        # For now, we'll return an error
-        return jsonify({'error': 'Password reset functionality not implemented'}), 501
+        token = data['token'].strip()
+        new_password = data['new_password']
+        
+        # Find user with valid reset token
+        user = User.query.filter_by(reset_token=token).first()
+        
+        if not user:
+            return jsonify({'error': 'Invalid or expired reset token'}), 400
+        
+        # Check if token is expired
+        if user.reset_token_expires and user.reset_token_expires < datetime.utcnow():
+            # Clear expired token
+            user.reset_token = None
+            user.reset_token_expires = None
+            db.session.commit()
+            return jsonify({'error': 'Reset token has expired'}), 400
+        
+        # Validate new password
+        is_valid_password, password_message = validate_password(new_password)
+        if not is_valid_password:
+            return jsonify({'error': password_message}), 400
+        
+        # Set new password
+        user.set_password(new_password)
+        user.reset_token = None
+        user.reset_token_expires = None
+        db.session.commit()
+        
+        return jsonify({'message': 'Password reset successfully'})
         
     except Exception as e:
         current_app.logger.error(f"Error resetting password: {str(e)}")

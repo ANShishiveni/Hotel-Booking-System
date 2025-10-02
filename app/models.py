@@ -41,6 +41,8 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     email_verified = db.Column(db.Boolean, default=False)
     last_login = db.Column(db.DateTime)
+    reset_token = db.Column(db.String(255))
+    reset_token_expires = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -469,6 +471,8 @@ class Review(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships are defined via backref in User and Hotel models
     
     # Constraints and indexes
     __table_args__ = (
