@@ -135,28 +135,33 @@
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label for="firstName" class="form-label">First Name *</label>
-                                                <input type="text" class="form-control" id="firstName" required>
-                                                <div class="invalid-feedback">Please enter your first name.</div>
+                                                <input type="text" class="form-control" id="firstName" required minlength="2" maxlength="50">
+                                                <div class="invalid-feedback">Please enter a valid first name (2-50 characters, letters only).</div>
+                                                <small class="form-text text-muted">Only letters, spaces, hyphens, and apostrophes allowed.</small>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label for="lastName" class="form-label">Last Name *</label>
-                                                <input type="text" class="form-control" id="lastName" required>
-                                                <div class="invalid-feedback">Please enter your last name.</div>
+                                                <input type="text" class="form-control" id="lastName" required minlength="2" maxlength="50">
+                                                <div class="invalid-feedback">Please enter a valid last name (2-50 characters, letters only).</div>
+                                                <small class="form-text text-muted">Only letters, spaces, hyphens, and apostrophes allowed.</small>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label for="email" class="form-label">Email Address *</label>
                                                 <input type="email" class="form-control" id="email" required>
                                                 <div class="invalid-feedback">Please enter a valid email address.</div>
+                                                <small class="form-text text-muted">We'll send booking confirmations to this email.</small>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label for="phone" class="form-label">Phone Number *</label>
-                                                <input type="tel" class="form-control" id="phone" required>
-                                                <div class="invalid-feedback">Please enter your phone number.</div>
+                                                <input type="tel" class="form-control" id="phone" required pattern="[\+]?[0-9\s\-\(\)]{8,15}" minlength="8" maxlength="20">
+                                                <div class="invalid-feedback" id="phoneError"></div>
+                                                <small class="form-text text-muted">Include country code if international (e.g., +264). Must be 8-20 digits.</small>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label for="dateOfBirth" class="form-label">Date of Birth</label>
-                                                <input type="date" class="form-control" id="dateOfBirth">
-                                                <small class="form-text text-muted">Required for some hotels</small>
+                                                <input type="date" class="form-control" id="dateOfBirth" max="" min="">
+                                                <div class="invalid-feedback" id="dateOfBirthError"></div>
+                                                <small class="form-text text-muted">Required for some hotels. Must be at least 16 years old.</small>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label for="nationality" class="form-label">Nationality</label>
@@ -230,22 +235,11 @@
                         <!-- Payment Information -->
                         <div class="mb-4">
                             <h5>Payment Information</h5>
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <strong>Demo Mode:</strong> Use test card <code>4242 4242 4242 4242</code> with any future expiry date and any 3-digit CVV.
-                            </div>
                             
                             <!-- Stripe Payment Form -->
                             <div class="card">
                                 <div class="card-body">
                                     <div class="row">
-                                        <div class="col-12 mb-3">
-                                            <div class="alert alert-info">
-                                                <i class="fas fa-info-circle me-2"></i>
-                                                <strong>Demo Payment System:</strong> This is a demonstration system. 
-                                                You can use any card details (e.g., 4242 4242 4242 4242) to test the booking flow.
-                                            </div>
-                                        </div>
                                         <div class="col-12 mb-3">
                                             <label class="form-label">Card Information *</label>
                                             <div id="card-element" class="form-control" style="height: 40px; padding: 10px;">
@@ -261,27 +255,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Test Cards Info -->
-                            <div class="mt-3">
-                                <h6>Test Cards for Demo:</h6>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card border-success">
-                                            <div class="card-body p-2">
-                                                <small class="text-success"><strong>Success:</strong> 4242 4242 4242 4242</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card border-danger">
-                                            <div class="card-body p-2">
-                                                <small class="text-danger"><strong>Decline:</strong> 4000 0000 0000 0002</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <small class="text-muted">Use any future expiry date (e.g., 12/25) and any 3-digit CVV (e.g., 123)</small>
-                            </div>
                         </div>
 
                         <!-- Terms and Conditions -->
@@ -513,7 +486,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
     document.getElementById('nights').textContent = nights + ' ' + (nights === 1 ? 'night' : 'nights');
     
-        // Initialize based on whether room type is pre-selected
+    // Initialize date of birth validation
+    initializeDateOfBirthValidation();
+    
+    // Initialize phone number validation
+    initializePhoneValidation();
+    
+    // Initialize based on whether room type is pre-selected
         {% if room_type %}
         // Room type is pre-selected from search
         updateBookingSummary({
@@ -663,6 +642,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 field.classList.remove('is-invalid', 'is-valid');
             }
         });
+        
+        // Validate date of birth if provided
+        const dateOfBirthField = document.getElementById('dateOfBirth');
+        if (dateOfBirthField && dateOfBirthField.value) {
+            if (!validateDateOfBirth()) {
+                isValid = false;
+            }
+        }
 
         // Validate primary guest
         requiredFields.forEach(fieldId => {
@@ -679,13 +666,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Validate email format
         const emailField = document.getElementById('email');
-        if (emailField) {
+        if (emailField && emailField.value) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (emailField.value && !emailRegex.test(emailField.value)) {
+            if (!emailRegex.test(emailField.value)) {
                 emailField.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                emailField.classList.add('is-valid');
+            }
+        }
+        
+        // Validate phone number format
+        const phoneField = document.getElementById('phone');
+        if (phoneField && phoneField.value) {
+            if (!validatePhoneNumber()) {
                 isValid = false;
             }
         }
+        
+        // Validate name fields (no numbers, special characters)
+        const nameFields = ['firstName', 'lastName'];
+        nameFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field && field.value) {
+                const nameRegex = /^[a-zA-Z\s\-']{2,50}$/;
+                if (!nameRegex.test(field.value.trim())) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.add('is-valid');
+                }
+            }
+        });
 
         // Validate additional guests
         const additionalGuests = document.querySelectorAll('.additional-guest');
@@ -708,6 +720,204 @@ document.addEventListener('DOMContentLoaded', function() {
         return isValid;
     }
 });
+
+// Date of Birth Validation Functions
+function initializeDateOfBirthValidation() {
+    const dateOfBirthInput = document.getElementById('dateOfBirth');
+    
+    if (!dateOfBirthInput) return;
+    
+    // Set date constraints
+    const today = new Date();
+    const maxDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
+    const minDate = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());
+    
+    // Set HTML5 date constraints
+    dateOfBirthInput.max = maxDate.toISOString().split('T')[0];
+    dateOfBirthInput.min = minDate.toISOString().split('T')[0];
+    
+    // Add validation event listener
+    dateOfBirthInput.addEventListener('input', validateDateOfBirth);
+    dateOfBirthInput.addEventListener('change', validateDateOfBirth);
+    dateOfBirthInput.addEventListener('blur', validateDateOfBirth);
+}
+
+function validateDateOfBirth() {
+    const dateOfBirthInput = document.getElementById('dateOfBirth');
+    const errorDiv = document.getElementById('dateOfBirthError');
+    
+    if (!dateOfBirthInput || !dateOfBirthInput.value) {
+        // Clear validation state if no value
+        dateOfBirthInput.classList.remove('is-valid', 'is-invalid');
+        if (errorDiv) errorDiv.textContent = '';
+        return true;
+    }
+    
+    const birthDate = new Date(dateOfBirthInput.value);
+    const today = new Date();
+    const age = calculateAge(birthDate, today);
+    
+    // Clear previous validation states
+    dateOfBirthInput.classList.remove('is-valid', 'is-invalid');
+    
+    // Validation rules
+    let isValid = true;
+    let errorMessage = '';
+    
+    // Check if date is in the future
+    if (birthDate > today) {
+        isValid = false;
+        errorMessage = 'Date of birth cannot be in the future.';
+    }
+    // Check if user is too young (less than 16 years old)
+    else if (age < 16) {
+        isValid = false;
+        errorMessage = `You must be at least 16 years old. Current age would be ${age} years.`;
+    }
+    // Check if user is too old (more than 120 years old)
+    else if (age > 120) {
+        isValid = false;
+        errorMessage = 'Please enter a valid date of birth.';
+    }
+    // Check if date is too far in the past (more than 120 years ago)
+    else if (birthDate < new Date(today.getFullYear() - 120, today.getMonth(), today.getDate())) {
+        isValid = false;
+        errorMessage = 'Please enter a valid date of birth.';
+    }
+    // Check for invalid dates (like February 30th)
+    else if (isNaN(birthDate.getTime())) {
+        isValid = false;
+        errorMessage = 'Please enter a valid date.';
+    }
+    
+    // Apply validation state
+    if (isValid) {
+        dateOfBirthInput.classList.add('is-valid');
+        if (errorDiv) errorDiv.textContent = '';
+    } else {
+        dateOfBirthInput.classList.add('is-invalid');
+        if (errorDiv) errorDiv.textContent = errorMessage;
+    }
+    
+    return isValid;
+}
+
+function calculateAge(birthDate, currentDate) {
+    let age = currentDate.getFullYear() - birthDate.getFullYear();
+    const monthDiff = currentDate.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && currentDate.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    
+    return age;
+}
+
+// Phone Number Validation Functions
+function initializePhoneValidation() {
+    const phoneInput = document.getElementById('phone');
+    
+    if (!phoneInput) return;
+    
+    // Add validation event listeners
+    phoneInput.addEventListener('input', validatePhoneNumber);
+    phoneInput.addEventListener('change', validatePhoneNumber);
+    phoneInput.addEventListener('blur', validatePhoneNumber);
+    
+    // Add formatting on input
+    phoneInput.addEventListener('input', formatPhoneNumber);
+}
+
+function validatePhoneNumber() {
+    const phoneInput = document.getElementById('phone');
+    const errorDiv = document.getElementById('phoneError');
+    
+    if (!phoneInput) return true;
+    
+    const phoneValue = phoneInput.value.trim();
+    
+    // Clear previous validation states
+    phoneInput.classList.remove('is-valid', 'is-invalid');
+    
+    // If empty and required, mark as invalid
+    if (!phoneValue && phoneInput.hasAttribute('required')) {
+        phoneInput.classList.add('is-invalid');
+        if (errorDiv) errorDiv.textContent = 'Phone number is required.';
+        return false;
+    }
+    
+    // If empty and not required, mark as valid
+    if (!phoneValue && !phoneInput.hasAttribute('required')) {
+        phoneInput.classList.add('is-valid');
+        if (errorDiv) errorDiv.textContent = '';
+        return true;
+    }
+    
+    // Clean phone number (remove all non-digit characters except +)
+    const cleanPhone = phoneValue.replace(/[^\d+]/g, '');
+    
+    let isValid = true;
+    let errorMessage = '';
+    
+    // Validation rules
+    if (cleanPhone.length < 8) {
+        isValid = false;
+        errorMessage = 'Phone number must be at least 8 digits long.';
+    } else if (cleanPhone.length > 20) {
+        isValid = false;
+        errorMessage = 'Phone number cannot exceed 20 digits.';
+    } else if (!/^[\+]?[0-9]+$/.test(cleanPhone)) {
+        isValid = false;
+        errorMessage = 'Phone number can only contain digits and an optional + at the beginning.';
+    } else if (cleanPhone.startsWith('+') && cleanPhone.length < 10) {
+        isValid = false;
+        errorMessage = 'International phone numbers must be at least 10 digits including country code.';
+    } else if (!cleanPhone.startsWith('+') && cleanPhone.length > 15) {
+        isValid = false;
+        errorMessage = 'Local phone numbers cannot exceed 15 digits.';
+    } else if (cleanPhone.startsWith('+') && !/^\+[1-9]\d{7,19}$/.test(cleanPhone)) {
+        isValid = false;
+        errorMessage = 'Invalid international phone number format.';
+    } else if (!cleanPhone.startsWith('+') && !/^[1-9]\d{7,14}$/.test(cleanPhone)) {
+        isValid = false;
+        errorMessage = 'Invalid local phone number format.';
+    }
+    
+    // Apply validation state
+    if (isValid) {
+        phoneInput.classList.add('is-valid');
+        if (errorDiv) errorDiv.textContent = '';
+    } else {
+        phoneInput.classList.add('is-invalid');
+        if (errorDiv) errorDiv.textContent = errorMessage;
+    }
+    
+    return isValid;
+}
+
+function formatPhoneNumber() {
+    const phoneInput = document.getElementById('phone');
+    if (!phoneInput) return;
+    
+    let value = phoneInput.value.replace(/[^\d+]/g, '');
+    
+    // If it starts with +, keep it as is for international numbers
+    if (value.startsWith('+')) {
+        // For international numbers, just ensure proper spacing
+        if (value.length > 4) {
+            value = value.substring(0, value.length - 3) + ' ' + value.substring(value.length - 3);
+        }
+    } else {
+        // For local numbers, add formatting
+        if (value.length >= 7) {
+            value = value.substring(0, 3) + '-' + value.substring(3, 6) + '-' + value.substring(6);
+        } else if (value.length >= 4) {
+            value = value.substring(0, 3) + '-' + value.substring(3);
+        }
+    }
+    
+    phoneInput.value = value;
+}
 
 function loadRoomTypes() {
     const startTime = Date.now();
@@ -904,17 +1114,44 @@ function updateBookingSummary(roomType) {
 }
 
 function loadUserProfile() {
-    fetch('/api/auth/profile')
-        .then(response => response.json())
+    const authToken = localStorage.getItem('authToken');
+    
+    if (!authToken) {
+        return; // No token, can't load profile
+    }
+    
+    fetch('/api/auth/profile', {
+        headers: {
+            'Authorization': `Bearer ${authToken}`
+        }
+    })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else if (response.status === 401) {
+                // Token expired, redirect to login
+                localStorage.removeItem('authToken');
+                window.location.href = '/';
+                return;
+            }
+            throw new Error('Failed to load profile');
+        })
         .then(data => {
             if (data.user) {
                 document.getElementById('firstName').value = data.user.first_name || '';
                 document.getElementById('lastName').value = data.user.last_name || '';
                 document.getElementById('email').value = data.user.email || '';
                 document.getElementById('phone').value = data.user.phone || '';
+                
+                // Update navigation with user info
+                if (document.getElementById('userNameNav')) {
+                    document.getElementById('userNameNav').textContent = data.user.first_name || 'User';
+                }
             }
         })
-        .catch(error => console.error('Error loading user profile:', error));
+        .catch(error => {
+            console.error('Error loading user profile:', error);
+        });
 }
 
 async function processBooking() {

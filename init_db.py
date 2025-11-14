@@ -157,6 +157,7 @@ def create_hotels():
     print("Creating hotels...")
     
     hotels_data = [
+        # Windhoek Hotels
         {
             'name': 'Namibia Luxury Hotel',
             'description': 'Experience unparalleled luxury in the heart of Windhoek. Our 5-star hotel offers world-class amenities, exceptional service, and stunning views of the city.',
@@ -185,6 +186,34 @@ def create_hotels():
             }
         },
         {
+            'name': 'Windhoek Grand Plaza',
+            'description': 'Modern elegance meets traditional hospitality in the capital city. Our contemporary hotel offers premium accommodations with panoramic city views.',
+            'address': '456 Kaiser Street',
+            'city': 'Windhoek',
+            'state': 'Khomas',
+            'country': 'Namibia',
+            'postal_code': '9000',
+            'phone': '+264612345001',
+            'email': 'info@windhoekgrand.com',
+            'website': 'https://www.windhoekgrand.com',
+            'latitude': -22.5680,
+            'longitude': 17.0836,
+            'star_rating': 4,
+            'amenities': ['WiFi', 'Pool', 'Restaurant', 'Bar', 'Gym', 'Business Center', 'Parking', 'Room Service'],
+            'images': [
+                'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'policies': {
+                'check_in': '15:00',
+                'check_out': '11:00',
+                'cancellation': 'Free cancellation up to 24 hours before check-in',
+                'pets': 'Pets allowed with additional fee',
+                'smoking': 'Non-smoking property'
+            }
+        },
+        # Swakopmund Hotels
+        {
             'name': 'Swakopmund Beach Resort',
             'description': 'Located on the pristine beaches of Swakopmund, our resort offers a perfect blend of coastal beauty and modern comfort.',
             'address': '456 Beach Road',
@@ -211,6 +240,199 @@ def create_hotels():
                 'smoking': 'Non-smoking property'
             }
         },
+        {
+            'name': 'Swakopmund Heritage Hotel',
+            'description': 'Step back in time at our beautifully restored colonial hotel in the heart of Swakopmund. Experience authentic German architecture with modern amenities.',
+            'address': '789 Bismarck Street',
+            'city': 'Swakopmund',
+            'state': 'Erongo',
+            'country': 'Namibia',
+            'postal_code': '9001',
+            'phone': '+264642345001',
+            'email': 'info@swakopheritage.com',
+            'website': 'https://www.swakopheritage.com',
+            'latitude': -22.6800,
+            'longitude': 14.5280,
+            'star_rating': 4,
+            'amenities': ['WiFi', 'Restaurant', 'Bar', 'Library', 'Garden', 'Parking', 'Tour Desk'],
+            'images': [
+                'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'policies': {
+                'check_in': '14:00',
+                'check_out': '11:00',
+                'cancellation': 'Free cancellation up to 48 hours before check-in',
+                'pets': 'Pets allowed with additional fee',
+                'smoking': 'Non-smoking property'
+            }
+        },
+        # Walvis Bay Hotels
+        {
+            'name': 'Walvis Bay Marina Hotel',
+            'description': 'Overlooking the bustling harbor of Walvis Bay, our modern hotel offers stunning ocean views and easy access to the famous lagoon.',
+            'address': '123 Harbor View Drive',
+            'city': 'Walvis Bay',
+            'state': 'Erongo',
+            'country': 'Namibia',
+            'postal_code': '9003',
+            'phone': '+264642345002',
+            'email': 'info@walvismarina.com',
+            'website': 'https://www.walvismarina.com',
+            'latitude': -22.9576,
+            'longitude': 14.5053,
+            'star_rating': 4,
+            'amenities': ['WiFi', 'Pool', 'Restaurant', 'Bar', 'Marina Access', 'Parking', 'Tour Desk'],
+            'images': [
+                'https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'policies': {
+                'check_in': '15:00',
+                'check_out': '11:00',
+                'cancellation': 'Free cancellation up to 24 hours before check-in',
+                'pets': 'Pets not allowed',
+                'smoking': 'Non-smoking property'
+            }
+        },
+        {
+            'name': 'Lagoon View Resort',
+            'description': 'Experience the natural beauty of Walvis Bay from our eco-friendly resort. Perfect for bird watching and nature enthusiasts.',
+            'address': '456 Lagoon Road',
+            'city': 'Walvis Bay',
+            'state': 'Erongo',
+            'country': 'Namibia',
+            'postal_code': '9003',
+            'phone': '+264642345003',
+            'email': 'info@lagoonview.com',
+            'website': 'https://www.lagoonview.com',
+            'latitude': -22.9500,
+            'longitude': 14.5100,
+            'star_rating': 3,
+            'amenities': ['WiFi', 'Restaurant', 'Bar', 'Bird Watching', 'Nature Tours', 'Parking', 'Garden'],
+            'images': [
+                'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'policies': {
+                'check_in': '14:00',
+                'check_out': '10:00',
+                'cancellation': 'Free cancellation up to 48 hours before check-in',
+                'pets': 'Pets allowed',
+                'smoking': 'Designated smoking areas'
+            }
+        },
+        # Ondangwa Hotels
+        {
+            'name': 'Ondangwa Business Hotel',
+            'description': 'Strategically located in the commercial hub of northern Namibia, our hotel caters to business travelers and tourists exploring the region.',
+            'address': '789 Main Street',
+            'city': 'Ondangwa',
+            'state': 'Oshana',
+            'country': 'Namibia',
+            'postal_code': '9004',
+            'phone': '+264652345000',
+            'email': 'info@ondangwabusiness.com',
+            'website': 'https://www.ondangwabusiness.com',
+            'latitude': -17.9167,
+            'longitude': 15.9500,
+            'star_rating': 3,
+            'amenities': ['WiFi', 'Restaurant', 'Bar', 'Business Center', 'Meeting Rooms', 'Parking', 'Airport Shuttle'],
+            'images': [
+                'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'policies': {
+                'check_in': '14:00',
+                'check_out': '11:00',
+                'cancellation': 'Free cancellation up to 24 hours before check-in',
+                'pets': 'Pets allowed with additional fee',
+                'smoking': 'Non-smoking property'
+            }
+        },
+        {
+            'name': 'Northern Comfort Inn',
+            'description': 'A cozy family-run hotel offering warm hospitality and comfortable accommodations in the heart of Ondangwa.',
+            'address': '321 Independence Avenue',
+            'city': 'Ondangwa',
+            'state': 'Oshana',
+            'country': 'Namibia',
+            'postal_code': '9004',
+            'phone': '+264652345001',
+            'email': 'info@northerncomfort.com',
+            'website': 'https://www.northerncomfort.com',
+            'latitude': -17.9200,
+            'longitude': 15.9550,
+            'star_rating': 3,
+            'amenities': ['WiFi', 'Restaurant', 'Bar', 'Garden', 'Parking', 'Tour Desk', 'Laundry Service'],
+            'images': [
+                'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'policies': {
+                'check_in': '15:00',
+                'check_out': '10:00',
+                'cancellation': 'Free cancellation up to 48 hours before check-in',
+                'pets': 'Pets allowed',
+                'smoking': 'Non-smoking property'
+            }
+        },
+        # Rundu Hotels
+        {
+            'name': 'Rundu Riverside Lodge',
+            'description': 'Experience the beauty of the Okavango River at our lodge in Rundu. Perfect for fishing, river cruises, and exploring northern Namibia.',
+            'address': '456 River Road',
+            'city': 'Rundu',
+            'state': 'Kavango East',
+            'country': 'Namibia',
+            'postal_code': '9005',
+            'phone': '+264662345000',
+            'email': 'info@runduriverside.com',
+            'website': 'https://www.runduriverside.com',
+            'latitude': -17.9333,
+            'longitude': 19.7667,
+            'star_rating': 3,
+            'amenities': ['WiFi', 'Restaurant', 'Bar', 'River Access', 'Fishing', 'Boat Tours', 'Parking', 'Garden'],
+            'images': [
+                'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'policies': {
+                'check_in': '14:00',
+                'check_out': '10:00',
+                'cancellation': 'Free cancellation up to 48 hours before check-in',
+                'pets': 'Pets allowed',
+                'smoking': 'Designated smoking areas'
+            }
+        },
+        {
+            'name': 'Okavango View Hotel',
+            'description': 'Modern accommodations with stunning views of the Okavango River. Ideal for business travelers and tourists exploring the Kavango region.',
+            'address': '789 Main Street',
+            'city': 'Rundu',
+            'state': 'Kavango East',
+            'country': 'Namibia',
+            'postal_code': '9005',
+            'phone': '+264662345001',
+            'email': 'info@okavangoview.com',
+            'website': 'https://www.okavangoview.com',
+            'latitude': -17.9300,
+            'longitude': 19.7700,
+            'star_rating': 4,
+            'amenities': ['WiFi', 'Pool', 'Restaurant', 'Bar', 'Business Center', 'River View', 'Parking', 'Tour Desk'],
+            'images': [
+                'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+                'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+            ],
+            'policies': {
+                'check_in': '15:00',
+                'check_out': '11:00',
+                'cancellation': 'Free cancellation up to 24 hours before check-in',
+                'pets': 'Pets allowed with additional fee',
+                'smoking': 'Non-smoking property'
+            }
+        },
+        # Etosha Safari Lodge (keeping the original)
         {
             'name': 'Etosha Safari Lodge',
             'description': 'Immerse yourself in the wild beauty of Namibia at our safari lodge near Etosha National Park.',

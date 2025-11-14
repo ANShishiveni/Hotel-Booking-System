@@ -7,7 +7,7 @@
 <section class="hero-section">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-lg-6">
+            <div class="col-lg-6 mb-4 mb-lg-0">
                 <h1 class="display-4 mb-4">Welcome to Namibia's Premier Hotel Booking Experience</h1>
                 <p class="lead mb-4">Discover luxury accommodations across Namibia's most beautiful destinations. From the bustling capital of Windhoek to the stunning landscapes of Swakopmund and beyond.</p>
                 <a href="{{ url_for('main.hotels') }}" class="btn btn-secondary btn-lg">
@@ -278,5 +278,7 @@ async function loadStatistics() {
         console.error('Error loading statistics:', error);
     }
 }
+
 </script>
 {% endblock %}
+

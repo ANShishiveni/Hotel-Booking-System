@@ -12,7 +12,7 @@ class TestOverbookingPrevention:
     @pytest.fixture(autouse=True)
     def setup_method(self):
         """Setup test database and data for each test"""
-        self.app = create_app(TestingConfig)
+        self.app = create_app('TestingConfig')
         self.app_context = self.app.app_context()
         self.app_context.push()
         

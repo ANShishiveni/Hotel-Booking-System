@@ -33,7 +33,13 @@ def run_migrations():
 def main():
     """Main application entry point"""
     # Get configuration from environment
-    config_name = 'DevelopmentConfig'  # Always use SQLite for development
+    config_name = os.environ.get('FLASK_ENV', 'development').title() + 'Config'
+    if config_name == 'ProductionConfig':
+        config_name = 'ProductionConfig'
+    elif config_name == 'DevelopmentConfig':
+        config_name = 'DevelopmentConfig'
+    else:
+        config_name = 'DevelopmentConfig'  # Default fallback
     
     # Create Flask application
     app = create_app(config_name)

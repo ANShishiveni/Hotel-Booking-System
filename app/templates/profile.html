@@ -155,7 +155,9 @@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="phone" class="form-label">Phone Number</label>
-                                            <input type="tel" class="form-control" id="phone">
+                                            <input type="tel" class="form-control" id="phone" minlength="8" maxlength="20">
+                                            <div class="invalid-feedback" id="phoneError"></div>
+                                            <small class="form-text text-muted">Include country code if international (e.g., +264). Must be 8-20 digits.</small>
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="username" class="form-label">Username</label>
@@ -163,7 +165,9 @@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="dateOfBirth" class="form-label">Date of Birth</label>
-                                            <input type="date" class="form-control" id="dateOfBirth">
+                                            <input type="date" class="form-control" id="dateOfBirth" max="" min="">
+                                            <div class="invalid-feedback" id="dateOfBirthError"></div>
+                                            <small class="form-text text-muted">Must be at least 16 years old.</small>
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="nationality" class="form-label">Nationality</label>
@@ -371,6 +375,12 @@ document.addEventListener('DOMContentLoaded', function() {
     loadUserProfile();
     loadDashboardStats();
     
+    // Initialize date of birth validation
+    initializeDateOfBirthValidation();
+    
+    // Initialize phone number validation
+    initializePhoneValidation();
+    
     // Profile form submission
     document.getElementById('profileForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -514,12 +524,28 @@ function getStatusBadgeClass(status) {
 }
 
 function saveProfile() {
+    // Validate date of birth before saving
+    const dateOfBirthField = document.getElementById('dateOfBirth');
+    if (dateOfBirthField && dateOfBirthField.value && !validateDateOfBirth()) {
+        showAlert('Please fix the date of birth error before saving.', 'danger');
+        return;
+    }
+    
+    // Validate phone number before saving
+    const phoneField = document.getElementById('phone');
+    if (phoneField && phoneField.value && !validatePhoneNumber()) {
+        showAlert('Please fix the phone number error before saving.', 'danger');
+        return;
+    }
+    
     const formData = {
         first_name: document.getElementById('firstName').value,
         last_name: document.getElementById('lastName').value,
         email: document.getElementById('email').value,
         phone: document.getElementById('phone').value,
-        username: document.getElementById('username').value
+        username: document.getElementById('username').value,
+        date_of_birth: document.getElementById('dateOfBirth').value,
+        nationality: document.getElementById('nationality').value
     };
     
     const authToken = localStorage.getItem('authToken');
@@ -687,6 +713,204 @@ function showAlert(message, type) {
             alertDiv.remove();
         }
     }, 5000);
+}
+
+// Date of Birth Validation Functions
+function initializeDateOfBirthValidation() {
+    const dateOfBirthInput = document.getElementById('dateOfBirth');
+    
+    if (!dateOfBirthInput) return;
+    
+    // Set date constraints
+    const today = new Date();
+    const maxDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
+    const minDate = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());
+    
+    // Set HTML5 date constraints
+    dateOfBirthInput.max = maxDate.toISOString().split('T')[0];
+    dateOfBirthInput.min = minDate.toISOString().split('T')[0];
+    
+    // Add validation event listener
+    dateOfBirthInput.addEventListener('input', validateDateOfBirth);
+    dateOfBirthInput.addEventListener('change', validateDateOfBirth);
+    dateOfBirthInput.addEventListener('blur', validateDateOfBirth);
+}
+
+function validateDateOfBirth() {
+    const dateOfBirthInput = document.getElementById('dateOfBirth');
+    const errorDiv = document.getElementById('dateOfBirthError');
+    
+    if (!dateOfBirthInput || !dateOfBirthInput.value) {
+        // Clear validation state if no value
+        dateOfBirthInput.classList.remove('is-valid', 'is-invalid');
+        if (errorDiv) errorDiv.textContent = '';
+        return true;
+    }
+    
+    const birthDate = new Date(dateOfBirthInput.value);
+    const today = new Date();
+    const age = calculateAge(birthDate, today);
+    
+    // Clear previous validation states
+    dateOfBirthInput.classList.remove('is-valid', 'is-invalid');
+    
+    // Validation rules
+    let isValid = true;
+    let errorMessage = '';
+    
+    // Check if date is in the future
+    if (birthDate > today) {
+        isValid = false;
+        errorMessage = 'Date of birth cannot be in the future.';
+    }
+    // Check if user is too young (less than 16 years old)
+    else if (age < 16) {
+        isValid = false;
+        errorMessage = `You must be at least 16 years old. Current age would be ${age} years.`;
+    }
+    // Check if user is too old (more than 120 years old)
+    else if (age > 120) {
+        isValid = false;
+        errorMessage = 'Please enter a valid date of birth.';
+    }
+    // Check if date is too far in the past (more than 120 years ago)
+    else if (birthDate < new Date(today.getFullYear() - 120, today.getMonth(), today.getDate())) {
+        isValid = false;
+        errorMessage = 'Please enter a valid date of birth.';
+    }
+    // Check for invalid dates (like February 30th)
+    else if (isNaN(birthDate.getTime())) {
+        isValid = false;
+        errorMessage = 'Please enter a valid date.';
+    }
+    
+    // Apply validation state
+    if (isValid) {
+        dateOfBirthInput.classList.add('is-valid');
+        if (errorDiv) errorDiv.textContent = '';
+    } else {
+        dateOfBirthInput.classList.add('is-invalid');
+        if (errorDiv) errorDiv.textContent = errorMessage;
+    }
+    
+    return isValid;
+}
+
+function calculateAge(birthDate, currentDate) {
+    let age = currentDate.getFullYear() - birthDate.getFullYear();
+    const monthDiff = currentDate.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && currentDate.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    
+    return age;
+}
+
+// Phone Number Validation Functions
+function initializePhoneValidation() {
+    const phoneInput = document.getElementById('phone');
+    
+    if (!phoneInput) return;
+    
+    // Add validation event listeners
+    phoneInput.addEventListener('input', validatePhoneNumber);
+    phoneInput.addEventListener('change', validatePhoneNumber);
+    phoneInput.addEventListener('blur', validatePhoneNumber);
+    
+    // Add formatting on input
+    phoneInput.addEventListener('input', formatPhoneNumber);
+}
+
+function validatePhoneNumber() {
+    const phoneInput = document.getElementById('phone');
+    const errorDiv = document.getElementById('phoneError');
+    
+    if (!phoneInput) return true;
+    
+    const phoneValue = phoneInput.value.trim();
+    
+    // Clear previous validation states
+    phoneInput.classList.remove('is-valid', 'is-invalid');
+    
+    // If empty and required, mark as invalid
+    if (!phoneValue && phoneInput.hasAttribute('required')) {
+        phoneInput.classList.add('is-invalid');
+        if (errorDiv) errorDiv.textContent = 'Phone number is required.';
+        return false;
+    }
+    
+    // If empty and not required, mark as valid
+    if (!phoneValue && !phoneInput.hasAttribute('required')) {
+        phoneInput.classList.add('is-valid');
+        if (errorDiv) errorDiv.textContent = '';
+        return true;
+    }
+    
+    // Clean phone number (remove all non-digit characters except +)
+    const cleanPhone = phoneValue.replace(/[^\d+]/g, '');
+    
+    let isValid = true;
+    let errorMessage = '';
+    
+    // Validation rules
+    if (cleanPhone.length < 8) {
+        isValid = false;
+        errorMessage = 'Phone number must be at least 8 digits long.';
+    } else if (cleanPhone.length > 20) {
+        isValid = false;
+        errorMessage = 'Phone number cannot exceed 20 digits.';
+    } else if (!/^[\+]?[0-9]+$/.test(cleanPhone)) {
+        isValid = false;
+        errorMessage = 'Phone number can only contain digits and an optional + at the beginning.';
+    } else if (cleanPhone.startsWith('+') && cleanPhone.length < 10) {
+        isValid = false;
+        errorMessage = 'International phone numbers must be at least 10 digits including country code.';
+    } else if (!cleanPhone.startsWith('+') && cleanPhone.length > 15) {
+        isValid = false;
+        errorMessage = 'Local phone numbers cannot exceed 15 digits.';
+    } else if (cleanPhone.startsWith('+') && !/^\+[1-9]\d{7,19}$/.test(cleanPhone)) {
+        isValid = false;
+        errorMessage = 'Invalid international phone number format.';
+    } else if (!cleanPhone.startsWith('+') && !/^[1-9]\d{7,14}$/.test(cleanPhone)) {
+        isValid = false;
+        errorMessage = 'Invalid local phone number format.';
+    }
+    
+    // Apply validation state
+    if (isValid) {
+        phoneInput.classList.add('is-valid');
+        if (errorDiv) errorDiv.textContent = '';
+    } else {
+        phoneInput.classList.add('is-invalid');
+        if (errorDiv) errorDiv.textContent = errorMessage;
+    }
+    
+    return isValid;
+}
+
+function formatPhoneNumber() {
+    const phoneInput = document.getElementById('phone');
+    if (!phoneInput) return;
+    
+    let value = phoneInput.value.replace(/[^\d+]/g, '');
+    
+    // If it starts with +, keep it as is for international numbers
+    if (value.startsWith('+')) {
+        // For international numbers, just ensure proper spacing
+        if (value.length > 4) {
+            value = value.substring(0, value.length - 3) + ' ' + value.substring(value.length - 3);
+        }
+    } else {
+        // For local numbers, add formatting
+        if (value.length >= 7) {
+            value = value.substring(0, 3) + '-' + value.substring(3, 6) + '-' + value.substring(6);
+        } else if (value.length >= 4) {
+            value = value.substring(0, 3) + '-' + value.substring(3);
+        }
+    }
+    
+    phoneInput.value = value;
 }
 </script>
 {% endblock %}

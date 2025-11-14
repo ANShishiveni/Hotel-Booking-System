@@ -1,5 +1,20 @@
 """
-Email service for sending notifications and confirmations
+Email Service Module
+
+This module provides a centralized email service for the Hotel Booking System.
+It handles all email communications including booking confirmations, payment 
+notifications, user registration welcome emails, password reset requests,
+and contact form notifications.
+
+Features:
+- Template-based email rendering with HTML and plain text support
+- Asynchronous email sending to prevent blocking the main application
+- Error handling and logging for failed email deliveries
+- Configurable sender information and SMTP settings
+- Support for multiple email types with consistent formatting
+
+Author: Hotel Booking System Team
+Version: 1.0.0
 """
 
 from flask import current_app, render_template_string
@@ -9,11 +24,37 @@ from datetime import datetime
 import os
 
 class EmailService:
-    """Service class for sending emails"""
+    """
+    Centralized email service for the Hotel Booking System.
+    
+    This class provides static methods for sending various types of emails
+    including booking confirmations, payment notifications, and user communications.
+    All emails are sent asynchronously to prevent blocking the main application flow.
+    """
     
     @staticmethod
     def send_email(to, subject, template, **kwargs):
-        """Send an email using a template"""
+        """
+        Send an email using a template with HTML and plain text support.
+        
+        This method handles the core email sending functionality with:
+        - Template rendering with context variables
+        - HTML and plain text content generation
+        - Error handling and logging
+        - SMTP configuration management
+        
+        Args:
+            to (str): Recipient email address
+            subject (str): Email subject line
+            template (str): Jinja2 template string for email content
+            **kwargs: Context variables to pass to the template
+            
+        Returns:
+            bool: True if email sent successfully, False otherwise
+            
+        Raises:
+            Exception: Logs email sending failures but doesn't raise to caller
+        """
         try:
             msg = Message(
                 subject=subject,

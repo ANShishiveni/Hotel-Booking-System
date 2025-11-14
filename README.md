@@ -50,14 +50,49 @@ The system uses a normalized database schema with the following key entities:
 
 ##  Quick Start
 
-### Prerequisites
+### Option 1: Docker Deployment (Recommended)
+
+**Prerequisites:**
+- Docker Desktop installed and running
+- Docker Compose (included with Docker Desktop)
+
+**Steps:**
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/hotel-booking-system.git
+   cd hotel-booking-system
+   ```
+
+2. **Configure environment variables**
+   Edit `docker-compose.yml` and update the environment variables:
+   ```yaml
+   environment:
+     - SECRET_KEY=your-super-secret-production-key
+     - JWT_SECRET_KEY=your-jwt-secret-key
+     - MAIL_USERNAME=your-email@gmail.com
+     - MAIL_PASSWORD=your-app-password
+   ```
+
+3. **Build and start services**
+   ```bash
+   docker-compose up --build -d
+   ```
+
+4. **Access the application**
+   - Application: http://localhost:5000
+   - Health Check: http://localhost:5000/health
+
+For detailed Docker setup instructions, see [DOCKER.md](DOCKER.md).
+
+### Option 2: Local Development Setup
+
+**Prerequisites:**
 - Python 3.9 or higher
-- PostgreSQL 13 or higher
+- PostgreSQL 13 or higher (or SQLite for development)
 - Node.js (for frontend assets, optional)
 - Git
 
-### Installation
-
+**Steps:**
 1. **Clone the repository**
    ```bash
    git clone https://github.com/your-username/hotel-booking-system.git

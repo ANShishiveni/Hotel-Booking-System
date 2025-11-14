@@ -7,6 +7,30 @@ import pytz
 
 main_bp = Blueprint('main', __name__)
 
+@main_bp.route('/health')
+def health_check():
+    """
+    Health check endpoint for Docker and load balancers.
+    
+    Returns:
+        dict: Application health status with timestamp
+    """
+    try:
+        # Test database connection
+        from sqlalchemy import text
+        db.session.execute(text('SELECT 1'))
+        db_status = 'healthy'
+    except Exception as e:
+        db_status = f'unhealthy: {str(e)}'
+    
+    return jsonify({
+        'status': 'healthy' if db_status == 'healthy' else 'unhealthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'database': db_status,
+        'version': '1.0.0',
+        'service': 'Hotel Booking System'
+    }), 200 if db_status == 'healthy' else 503
+
 @main_bp.route('/test-js')
 def test_js():
     """Test JavaScript execution"""

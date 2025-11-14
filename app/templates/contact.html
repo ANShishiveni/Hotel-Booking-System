@@ -129,8 +129,10 @@
                                     <input type="email" class="form-control" id="email" name="email" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="phone" class="form-label">Phone Number</label>
-                                    <input type="tel" class="form-control" id="phone" name="phone">
+                                    <label for="phone" class="form-label">Phone Number (Optional)</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" minlength="8" maxlength="20">
+                                    <div class="invalid-feedback" id="phoneError"></div>
+                                    <small class="form-text text-muted">Include country code if international (e.g., +264). Must be 8-20 digits.</small>
                                 </div>
                             </div>
                             
@@ -249,6 +251,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const contactForm = document.getElementById('contactForm');
     const contactMessage = document.getElementById('contactMessage');
     
+    // Initialize phone number validation
+    initializePhoneValidation();
+    
     contactForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -284,5 +289,111 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 2000);
     });
 });
+
+// Phone Number Validation Functions
+function initializePhoneValidation() {
+    const phoneInput = document.getElementById('phone');
+    
+    if (!phoneInput) return;
+    
+    // Add validation event listeners
+    phoneInput.addEventListener('input', validatePhoneNumber);
+    phoneInput.addEventListener('change', validatePhoneNumber);
+    phoneInput.addEventListener('blur', validatePhoneNumber);
+    
+    // Add formatting on input
+    phoneInput.addEventListener('input', formatPhoneNumber);
+}
+
+function validatePhoneNumber() {
+    const phoneInput = document.getElementById('phone');
+    const errorDiv = document.getElementById('phoneError');
+    
+    if (!phoneInput) return true;
+    
+    const phoneValue = phoneInput.value.trim();
+    
+    // Clear previous validation states
+    phoneInput.classList.remove('is-valid', 'is-invalid');
+    
+    // If empty and required, mark as invalid
+    if (!phoneValue && phoneInput.hasAttribute('required')) {
+        phoneInput.classList.add('is-invalid');
+        if (errorDiv) errorDiv.textContent = 'Phone number is required.';
+        return false;
+    }
+    
+    // If empty and not required, mark as valid
+    if (!phoneValue && !phoneInput.hasAttribute('required')) {
+        phoneInput.classList.add('is-valid');
+        if (errorDiv) errorDiv.textContent = '';
+        return true;
+    }
+    
+    // Clean phone number (remove all non-digit characters except +)
+    const cleanPhone = phoneValue.replace(/[^\d+]/g, '');
+    
+    let isValid = true;
+    let errorMessage = '';
+    
+    // Validation rules
+    if (cleanPhone.length < 8) {
+        isValid = false;
+        errorMessage = 'Phone number must be at least 8 digits long.';
+    } else if (cleanPhone.length > 20) {
+        isValid = false;
+        errorMessage = 'Phone number cannot exceed 20 digits.';
+    } else if (!/^[\+]?[0-9]+$/.test(cleanPhone)) {
+        isValid = false;
+        errorMessage = 'Phone number can only contain digits and an optional + at the beginning.';
+    } else if (cleanPhone.startsWith('+') && cleanPhone.length < 10) {
+        isValid = false;
+        errorMessage = 'International phone numbers must be at least 10 digits including country code.';
+    } else if (!cleanPhone.startsWith('+') && cleanPhone.length > 15) {
+        isValid = false;
+        errorMessage = 'Local phone numbers cannot exceed 15 digits.';
+    } else if (cleanPhone.startsWith('+') && !/^\+[1-9]\d{7,19}$/.test(cleanPhone)) {
+        isValid = false;
+        errorMessage = 'Invalid international phone number format.';
+    } else if (!cleanPhone.startsWith('+') && !/^[1-9]\d{7,14}$/.test(cleanPhone)) {
+        isValid = false;
+        errorMessage = 'Invalid local phone number format.';
+    }
+    
+    // Apply validation state
+    if (isValid) {
+        phoneInput.classList.add('is-valid');
+        if (errorDiv) errorDiv.textContent = '';
+    } else {
+        phoneInput.classList.add('is-invalid');
+        if (errorDiv) errorDiv.textContent = errorMessage;
+    }
+    
+    return isValid;
+}
+
+function formatPhoneNumber() {
+    const phoneInput = document.getElementById('phone');
+    if (!phoneInput) return;
+    
+    let value = phoneInput.value.replace(/[^\d+]/g, '');
+    
+    // If it starts with +, keep it as is for international numbers
+    if (value.startsWith('+')) {
+        // For international numbers, just ensure proper spacing
+        if (value.length > 4) {
+            value = value.substring(0, value.length - 3) + ' ' + value.substring(value.length - 3);
+        }
+    } else {
+        // For local numbers, add formatting
+        if (value.length >= 7) {
+            value = value.substring(0, 3) + '-' + value.substring(3, 6) + '-' + value.substring(6);
+        } else if (value.length >= 4) {
+            value = value.substring(0, 3) + '-' + value.substring(3);
+        }
+    }
+    
+    phoneInput.value = value;
+}
 </script>
 {% endblock %}

@@ -52,7 +52,7 @@ class TestingConfig(Config):
     """Testing configuration"""
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-        'postgresql://hotel_user:hotel_pass@localhost/hotel_booking_test'
+        'sqlite:///hotel_booking_test.db'
     WTF_CSRF_ENABLED = False
 
 class ProductionConfig(Config):

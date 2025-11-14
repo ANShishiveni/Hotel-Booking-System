@@ -5,7 +5,7 @@ from config import TestingConfig
 @pytest.fixture(scope='session')
 def app():
     """Create application for testing"""
-    app = create_app(TestingConfig)
+    app = create_app('TestingConfig')
     with app.app_context():
         yield app
 

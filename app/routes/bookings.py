@@ -99,7 +99,37 @@ def get_booking(booking_id):
 @bookings_bp.route('', methods=['POST'])
 @jwt_required()
 def create_booking():
-    """Create a new booking with concurrency control"""
+    """
+    Create a new booking with concurrency control and overbooking prevention.
+    
+    This endpoint handles the complete booking creation process including:
+    - Input validation and date parsing
+    - Room availability checking with database locking
+    - Price calculation and tax computation
+    - Guest information processing
+    - Database transaction with rollback on failure
+    - Email confirmation sending
+    
+    Business Logic:
+    1. Validates user authentication and required fields
+    2. Parses and validates check-in/check-out dates
+    3. Finds available rooms using pessimistic locking to prevent overbooking
+    4. Calculates pricing including taxes and fees
+    5. Creates booking and guest records in a single transaction
+    6. Sends confirmation email to user
+    
+    Args:
+        JSON payload with: hotel_id, room_type_id, check_in_date, check_out_date, guests
+        
+    Returns:
+        JSON response with booking details or error message
+        
+    Raises:
+        400: Bad Request - Missing required fields or invalid dates
+        404: Not Found - Hotel, room type, or user not found
+        409: Conflict - No available rooms for selected dates
+        500: Internal Server Error - Database or email system failure
+    """
     try:
         current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
@@ -267,7 +297,41 @@ def create_booking():
 @bookings_bp.route('/<int:booking_id>/confirm', methods=['POST'])
 @jwt_required()
 def confirm_booking(booking_id):
-    """Confirm a pending booking"""
+    """
+    Confirm a pending booking and send confirmation email.
+    
+    This endpoint handles the booking confirmation process which includes:
+    - Database transaction with row-level locking to prevent race conditions
+    - Status validation to ensure only pending bookings can be confirmed
+    - Audit logging for compliance and tracking
+    - Email notification to the customer
+    
+    Business Logic:
+    1. Validates user ownership of the booking
+    2. Uses pessimistic locking (SELECT FOR UPDATE) to prevent concurrent modifications
+    3. Validates booking is in 'pending' status
+    4. Updates booking status to 'confirmed' with timestamp
+    5. Creates comprehensive audit log entry
+    6. Sends booking confirmation email to customer
+    7. Commits transaction atomically
+    
+    Args:
+        booking_id (int): ID of the booking to confirm
+        
+    Returns:
+        JSON response with updated booking details or error message
+        
+    Raises:
+        400: Bad Request - Booking not in pending status
+        404: Not Found - Booking not found or not owned by user
+        500: Internal Server Error - Database or email system failure
+        
+    Security:
+        - JWT authentication required
+        - User can only confirm their own bookings
+        - Database locking prevents race conditions
+        - Comprehensive audit trail
+    """
     try:
         current_user_id = get_jwt_identity()
         
