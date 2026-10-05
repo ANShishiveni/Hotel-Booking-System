@@ -24,13 +24,18 @@ def create_app(config_name=None):
     else:
         app.config.from_object('config.DevelopmentConfig')
     
+    # Fail closed when production secrets/configuration are missing.
+    if config_name == 'production':
+        from config import ProductionConfig
+        ProductionConfig.validate()
+
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
     mail.init_app(app)
     cache.init_app(app)
-    CORS(app)
+    CORS(app, resources={r"/api/*": {"origins": os.environ.get('CORS_ORIGINS', 'http://localhost:5000').split(',')}})
     
     # Make cache available as app.cache
     app.cache = cache
