@@ -10,8 +10,8 @@ import hashlib
 
 payments_bp = Blueprint('payments', __name__)
 
-# Initialize Stripe (test mode for demonstrations)
-stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_demo_key_for_development')
+# Configure Stripe from the environment. Never fall back to a shared/demo secret.
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
 @payments_bp.route('/create-payment-intent', methods=['POST'])
 @jwt_required()
@@ -213,16 +213,16 @@ def stripe_webhook():
         payload = request.get_data()
         sig_header = request.headers.get('Stripe-Signature')
         
-        # Verify webhook signature (in production)
-        webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET', 'whsec_mock_secret')
-        
-        # In a real implementation, you would verify the signature:
-        # event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
-        
-        # Mock event parsing
-        import json
-        event_data = json.loads(payload)
-        event_type = event_data.get('type', 'payment_intent.succeeded')
+        webhook_secret = current_app.config.get('STRIPE_WEBHOOK_SECRET')
+        if not webhook_secret or not sig_header:
+            return jsonify({'error': 'Webhook verification is not configured'}), 503
+
+        try:
+            event_data = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+        except (ValueError, stripe.error.SignatureVerificationError):
+            return jsonify({'error': 'Invalid webhook signature'}), 400
+
+        event_type = event_data.get('type')
         
         if event_type == 'payment_intent.succeeded':
             payment_intent = event_data.get('data', {}).get('object', {})

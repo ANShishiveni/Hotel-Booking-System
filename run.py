@@ -33,20 +33,19 @@ def run_migrations():
 def main():
     """Main application entry point"""
     # Get configuration from environment
-    config_name = os.environ.get('FLASK_ENV', 'development').title() + 'Config'
-    if config_name == 'ProductionConfig':
-        config_name = 'ProductionConfig'
-    elif config_name == 'DevelopmentConfig':
-        config_name = 'DevelopmentConfig'
-    else:
-        config_name = 'DevelopmentConfig'  # Default fallback
+    environment = os.environ.get('FLASK_ENV', 'development').lower()
+    config_name = {
+        'production': 'ProductionConfig',
+        'testing': 'TestingConfig',
+        'development': 'DevelopmentConfig',
+    }.get(environment, 'DevelopmentConfig')
     
     # Create Flask application
     app = create_app(config_name)
     
     with app.app_context():
         # Create tables for development
-        if config_name == 'development':
+        if config_name == 'DevelopmentConfig':
             create_tables()
         else:
             # Run migrations for production
@@ -55,7 +54,7 @@ def main():
     # Get host and port from environment
     host = os.environ.get('HOST', '0.0.0.0')
     port = int(os.environ.get('PORT', 5000))
-    debug = config_name == 'development'
+    debug = config_name == 'DevelopmentConfig'
     
     print(f"🚀 Starting Hotel Booking System...")
     print(f"📊 Environment: {config_name}")
@@ -64,7 +63,7 @@ def main():
     print(f"🐛 Debug: {debug}")
     print(f"📧 Mail Server: {app.config.get('MAIL_SERVER', 'Not configured')}")
     
-    if config_name == 'development':
+    if config_name == 'DevelopmentConfig':
         print("\n📚 API Documentation: http://localhost:5000/api/docs")
         print("🔍 Admin Panel: http://localhost:5000/admin (admin role required)")
         print("📧 Mailpit: http://localhost:8025 (if running)")
